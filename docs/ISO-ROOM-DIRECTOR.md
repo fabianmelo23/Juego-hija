@@ -148,10 +148,10 @@ Trabajamos **uno por uno**. No se salta de categoría sin cerrar el shell.
 
 ### Fase P2 — Habitación jugable con gatos
 9. **19 `bed_cat`** ✅ hecho (Ninguna / Crema / Rubor / Menta)  
-10. **20 `bowl_food`** ← siguiente  
-11. **22 `scratcher`**  
-12. **24 `toy_ball`**  
-13. Migrar Miel + cuidados al cuarto iso  
+10. **20 `bowl_food`** ✅ hecho (Ninguno / Lleno / Medio / Vacío)  
+11. **22 `scratcher`** ✅ hecho (Ninguno / Madera / Rubor / Menta)  
+12. **24 `toy_ball`** ✅ hecho (Ninguna / Roja / Cielo / Sol)  
+13. Migrar Miel + cuidados al cuarto iso ← siguiente  
 14. Migrar mochila/colocación al grid iso
 
 ### Fase P3 — Personalidad del espacio
@@ -210,4 +210,4 @@ Hasta que el shell (piso + 2 paredes) no esté sólido, no avanzamos a 20 mueble
 
 ## 10. Siguiente acción inmediata
 
-**Crear Ítem 20 — `bowl_food`:** plato de comida 1×1 (gancho de cuidados).
+**Migrar Miel + cuidados** al cuarto isométrico (hambre / energía / felicidad sobre el nuevo espacio).

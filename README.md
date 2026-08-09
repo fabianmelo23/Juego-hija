@@ -16,7 +16,10 @@ Catálogo y orden de creación: [`docs/ISO-ROOM-DIRECTOR.md`](docs/ISO-ROOM-DIRE
 - ✅ **Ítem 04 — Papel tapiz** (Ninguno / Puntos / Rayas)
 - ✅ **Ítem 15 — Alfombra chica** (Ninguna / Rubor / Salvia / Cielo)
 - ✅ **Ítem 19 — Cama de gato** (Ninguna / Crema / Rubor / Menta)
-- 🔜 Ítem 20 — Plato de comida
+- ✅ **Ítem 20 — Plato de comida** (Ninguno / Lleno / Medio / Vacío)
+- ✅ **Ítem 22 — Rascador** (Ninguno / Madera / Rubor / Menta)
+- ✅ **Ítem 24 — Pelota** (Ninguna / Roja / Cielo / Sol)
+- 🔜 Migrar Miel + cuidados al cuarto iso
 
 ## APK de prueba
 

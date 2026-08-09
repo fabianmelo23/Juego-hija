@@ -59,7 +59,7 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.28, 0.22, 0.18, 1)
 theme_override_font_sizes/font_size = 18
-text = "Ítem 19: Cama de gato"
+text = "Ítem 24: Pelota"
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="IsoHUD/Safe/VBox"]

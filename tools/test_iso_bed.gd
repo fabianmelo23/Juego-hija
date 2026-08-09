@@ -17,13 +17,7 @@ func _run() -> void:
 		quit(1)
 		return
 
-	var layer: Node2D = room.get_node("RoomRoot/FurnitureLayer")
-	if layer.get_child_count() != 1:
-		push_error("expected 1 bed sprite")
-		quit(1)
-		return
-
-	var sprite: Sprite2D = layer.get_child(0)
+	var sprite: Sprite2D = room.get_node("RoomRoot/FurnitureLayer/Bed")
 	if sprite.texture == null or not sprite.visible:
 		push_error("bed should be visible")
 		quit(1)
