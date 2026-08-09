@@ -7,9 +7,10 @@ func _init() -> void:
 
 
 func _run() -> void:
-	# Evita progreso previo de otras pruebas.
 	if FileAccess.file_exists("user://progress.json"):
 		DirAccess.remove_absolute("user://progress.json")
+	if FileAccess.file_exists("user://iso_free_layout.json"):
+		DirAccess.remove_absolute("user://iso_free_layout.json")
 
 	var scene: PackedScene = load("res://scenes/iso/iso_room.tscn")
 	var room: Node2D = scene.instantiate()
@@ -39,17 +40,14 @@ func _run() -> void:
 		quit(1)
 		return
 
-	# Colocar cama completa misión place_bed (después de greet+feed si aplica).
-	room.set_bed_variant("bed_cat_cream")
-	if room.get_current_bed_variant() != "bed_cat_cream":
+	var free: Node2D = room.get_node("RoomRoot/FreeItems")
+	free.place_or_move("bed", "bed_cat_cream", Vector2(40, 80))
+	if not free.has_item("bed"):
 		push_error("bed place failed")
 		quit(1)
 		return
 
 	gameplay.buy_treat()
-	if gameplay.missions.flags.get("bought", false) != true and gameplay.missions.current_index < 4:
-		# buy may or may not be current; flag should set
-		pass
 	if not bool(gameplay.missions.flags.get("bought", false)):
 		push_error("buy flag not set")
 		quit(1)

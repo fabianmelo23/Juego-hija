@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://bqisoroom001"]
+[gd_scene load_steps=4 format=3 uid="uid://bqisoroom001"]
 
 [ext_resource type="Script" path="res://scripts/iso/iso_room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/iso/iso_gameplay.gd" id="2_gameplay"]
+[ext_resource type="Script" path="res://scripts/iso/iso_free_items.gd" id="3_free"]
 
 [node name="IsoRoom" type="Node2D"]
 script = ExtResource("1_room")
@@ -28,6 +29,9 @@ polygon = PackedVector2Array(-200, -200, 920, -200, 920, 1500, -200, 1500)
 [node name="RugLayer" type="Node2D" parent="RoomRoot"]
 
 [node name="FurnitureLayer" type="Node2D" parent="RoomRoot"]
+
+[node name="FreeItems" type="Node2D" parent="RoomRoot"]
+script = ExtResource("3_free")
 
 [node name="CatLayer" type="Node2D" parent="RoomRoot"]
 
@@ -87,7 +91,7 @@ autowrap_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.28, 0.22, 0.18, 1)
 theme_override_font_sizes/font_size = 16
-text = "Toca a Miel para cuidarla"
+text = "Zoom · catálogo · colocación libre"
 horizontal_alignment = 1
 
 [node name="CarePanel" type="PanelContainer" parent="IsoHUD/Safe/VBox"]

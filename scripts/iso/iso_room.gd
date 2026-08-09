@@ -14,7 +14,9 @@ signal scratcher_changed(variant_id: String)
 signal toy_changed(variant_id: String)
 
 const ROOM_SIZE := Vector2i(8, 8)
-const WALL_HEIGHT := 64
+const WALL_HEIGHT := 88
+const WALL_LEFT_ORIGIN := Vector2(-264, -96)
+const WALL_RIGHT_ORIGIN := Vector2(-8, -96)
 const WINDOW_SLOT_X := 3 # posición en la pared derecha
 const RUG_ORIGIN := Vector2i(3, 3) # default
 const BED_ORIGIN := Vector2i(5, 2)
@@ -36,6 +38,10 @@ const TOY_ORIGIN := Vector2i(4, 5)
 @onready var background: Polygon2D = $Background
 @onready var title_label: Label = $IsoHUD/Safe/VBox/TopRow/Title
 @onready var gameplay: Node = $Gameplay
+@onready var free_items: Node2D = $RoomRoot/FreeItems
+var camera_ctrl: Node
+var catalog_ui: Control
+var _drag_active := false
 @onready var hint_label: Label = $IsoHUD/Safe/VBox/Hint
 @onready var tab_bar: HBoxContainer = $IsoHUD/Safe/VBox/TabBar
 @onready var item_tab_bar: HBoxContainer = $IsoHUD/Safe/VBox/ItemTabBar
@@ -168,14 +174,8 @@ func _ready() -> void:
 	_build_wallpaper()
 	_build_window()
 	_build_light()
-	_build_rug()
-	_build_bed()
-	_build_bowl()
-	_build_scratcher()
-	_build_toy()
+	# Muebles libres: FreeItems (catálogo drag-and-drop).
 	_ghost_layer = ghost_layer
-	_load_iso_layout()
-	_apply_all_furniture_transforms()
 	_build_tabs()
 	_rebuild_variant_buttons()
 	title_label.text = "Casa de Gatos"
@@ -185,13 +185,9 @@ func _ready() -> void:
 	set_wallpaper_variant(_current_wallpaper)
 	set_window_variant(_current_window)
 	set_light_variant(_current_light)
-	set_rug_variant(_current_rug)
-	set_bed_variant(_current_bed)
-	set_bowl_variant(_current_bowl)
-	set_scratcher_variant(_current_scratcher)
-	set_toy_variant(_current_toy)
 	_set_edit_target("floor")
 	_setup_gameplay()
+	_setup_camera_and_catalog()
 
 
 
@@ -199,9 +195,9 @@ func _setup_gameplay() -> void:
 	gameplay.mode_bar = $IsoHUD/Safe/VBox/ModeBar
 	gameplay.decorate_tabs = [
 		$IsoHUD/Safe/VBox/TabBar,
-		$IsoHUD/Safe/VBox/ItemTabBar,
 		$IsoHUD/Safe/VBox/VariantBar,
 	]
+	$IsoHUD/Safe/VBox/ItemTabBar.visible = false
 	gameplay.care_panel = $IsoHUD/Safe/VBox/CarePanel
 	gameplay.care_bar = $IsoHUD/Safe/VBox/CareBar
 	gameplay.mission_panel = $IsoHUD/Safe/MissionPanel
@@ -242,11 +238,17 @@ func _build_mode_bar() -> void:
 			match target:
 				"care":
 					_clear_ghost()
+					_set_catalog_visible(false)
+					if camera_ctrl:
+						camera_ctrl.pan_enabled = true
 					gameplay.set_mode("care")
-					hint_label.text = "Toca a Miel para cuidarla"
+					hint_label.text = "Toca a Miel · pellizca para zoom · arrastra con 2 dedos para mover vista"
 				"decorate":
 					gameplay.set_mode("decorate")
-					hint_label.text = "Elige un mueble y toca el piso para moverlo"
+					_set_catalog_visible(true)
+					if camera_ctrl:
+						camera_ctrl.pan_enabled = true
+					hint_label.text = "Arrastra del catálogo al cuarto · pellizca = zoom"
 					_set_edit_target(_edit_target)
 				"mission":
 					gameplay.open_mission()
@@ -275,26 +277,30 @@ func _build_care_bar() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _drag_active:
+		return
+	if camera_ctrl and camera_ctrl.handle_input(event):
+		get_viewport().set_input_as_handled()
+		return
 	var tap_pos: Variant = null
 	if event is InputEventScreenTouch and event.pressed:
 		tap_pos = event.position
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		tap_pos = event.position
 	if tap_pos != null:
-		if gameplay.get_mode() == "decorate" and _try_place_at_screen(tap_pos):
-			get_viewport().set_input_as_handled()
-			return
 		if gameplay.handle_tap(tap_pos):
 			get_viewport().set_input_as_handled()
 
 
 func on_cat_fed() -> void:
-	# El plato se vacía un poco al comer.
-	match _current_bowl:
+	if free_items == null or not free_items.has_item("bowl"):
+		return
+	var cur: String = free_items.get_variant("bowl")
+	match cur:
 		"bowl_food_full":
-			set_bowl_variant("bowl_food_half")
+			free_items.set_variant("bowl", "bowl_food_half")
 		"bowl_food_half":
-			set_bowl_variant("bowl_food_empty")
+			free_items.set_variant("bowl", "bowl_food_empty")
 
 
 func _notify_place_once(item_id: String, is_present: bool) -> void:
@@ -304,6 +310,124 @@ func _notify_place_once(item_id: String, is_present: bool) -> void:
 		return
 	_placed_notified[item_id] = true
 	gameplay.notify_furniture_placed(item_id)
+
+
+
+func _setup_camera_and_catalog() -> void:
+	camera_ctrl = preload("res://scripts/iso/iso_camera.gd").new()
+	add_child(camera_ctrl)
+	camera_ctrl.setup(room_root, room_root.position)
+
+	catalog_ui = preload("res://scripts/iso/iso_catalog.gd").new()
+	catalog_ui.name = "Catalog"
+	catalog_ui.visible = false
+	# Insertar a la izquierda del HUD
+	var safe: MarginContainer = $IsoHUD/Safe
+	var host := HBoxContainer.new()
+	host.name = "BodyRow"
+	host.set_anchors_preset(Control.PRESET_FULL_RECT)
+	host.add_theme_constant_override("separation", 8)
+	# Reparent VBox content into right side — simpler: add catalog as left child of Safe using overlay
+	catalog_ui.anchor_left = 0.0
+	catalog_ui.anchor_top = 0.0
+	catalog_ui.anchor_right = 0.0
+	catalog_ui.anchor_bottom = 1.0
+	catalog_ui.offset_left = 0.0
+	catalog_ui.offset_top = 0.0
+	catalog_ui.offset_right = 168.0
+	catalog_ui.offset_bottom = 0.0
+	safe.add_child(catalog_ui)
+
+	catalog_ui.drag_started.connect(_on_catalog_drag_started)
+	catalog_ui.drag_updated.connect(_on_catalog_drag_updated)
+	catalog_ui.drag_dropped.connect(_on_catalog_drag_dropped)
+	catalog_ui.drag_cancelled.connect(_on_catalog_drag_cancelled)
+	catalog_ui.ambient_selected.connect(_on_catalog_ambient)
+
+	if free_items:
+		free_items.item_placed.connect(func(item_id: String, _variant_id: String) -> void:
+			_notify_place_once(item_id, true)
+		)
+
+	# Zoom buttons
+	var zoom_bar := HBoxContainer.new()
+	zoom_bar.name = "ZoomBar"
+	$IsoHUD/Safe/VBox/TopRow.add_child(zoom_bar)
+	for label_delta in [["−", -0.15], ["⊕", 0.0], ["+", 0.15]]:
+		var b := Button.new()
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(44, 40)
+		b.text = str(label_delta[0])
+		var d := float(label_delta[1])
+		b.pressed.connect(func() -> void:
+			if d == 0.0:
+				camera_ctrl.reset_view()
+			else:
+				camera_ctrl.zoom_by(d)
+		)
+		zoom_bar.add_child(b)
+
+
+func _set_catalog_visible(v: bool) -> void:
+	if catalog_ui:
+		catalog_ui.visible = v
+	var safe: MarginContainer = $IsoHUD/Safe
+	safe.add_theme_constant_override("margin_left", 176 if v else 16)
+
+
+func _screen_to_room_local(screen_pos: Vector2) -> Vector2:
+	var world: Vector2 = get_canvas_transform().affine_inverse() * screen_pos
+	return room_root.to_local(world)
+
+
+func _on_catalog_drag_started(item_id: String, variant_id: String, _texture: Texture2D) -> void:
+	_drag_active = true
+	set_meta("drag_item_id", item_id)
+	set_meta("drag_variant_id", variant_id)
+	if camera_ctrl:
+		camera_ctrl.pan_enabled = false
+	free_items.begin_ghost(item_id, variant_id)
+
+
+func _on_catalog_drag_updated(screen_pos: Vector2) -> void:
+	if not _drag_active or not has_meta("drag_item_id"):
+		return
+	var local := _screen_to_room_local(screen_pos)
+	free_items.update_ghost_at(local, str(get_meta("drag_item_id")))
+
+
+func _on_catalog_drag_dropped(item_id: String, variant_id: String, screen_pos: Vector2) -> void:
+	_drag_active = false
+	if camera_ctrl:
+		camera_ctrl.pan_enabled = true
+	var local := _screen_to_room_local(screen_pos)
+	free_items.place_or_move(item_id, variant_id, local)
+	gameplay.show_toast("Colocado: %s" % item_id)
+	hint_label.text = "Suelta cerca de una mesa para apilar (ej. pelota)"
+
+
+func _on_catalog_drag_cancelled() -> void:
+	_drag_active = false
+	if camera_ctrl:
+		camera_ctrl.pan_enabled = true
+	free_items.hide_ghost()
+
+
+func _on_catalog_ambient(category: String, _variant_id: String) -> void:
+	# Abre las pestañas de ambiente existentes
+	var map := {
+		"floor": "floor",
+		"wall": "wall_left",
+		"wallpaper": "wallpaper",
+		"window": "window",
+		"light": "light",
+	}
+	var target := str(map.get(category, "floor"))
+	_set_edit_target(target)
+	# Mostrar barras de variantes
+	$IsoHUD/Safe/VBox/TabBar.visible = true
+	$IsoHUD/Safe/VBox/VariantBar.visible = true
+	hint_label.text = "Elige variante de %s" % category
 
 
 func _load_textures() -> void:
@@ -383,30 +507,26 @@ func _build_wall_left() -> void:
 	for child in wall_left_layer.get_children():
 		child.queue_free()
 	_wall_left_tiles.clear()
-	for y in ROOM_SIZE.y:
-		var sprite := Sprite2D.new()
-		sprite.centered = false
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		var anchor := IsoMath.grid_to_screen(Vector2i(0, y))
-		sprite.position = anchor - Vector2(IsoMath.TILE_W / 2, WALL_HEIGHT)
-		sprite.z_index = 5 + y
-		wall_left_layer.add_child(sprite)
-		_wall_left_tiles.append(sprite)
+	var sprite := Sprite2D.new()
+	sprite.centered = false
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.position = WALL_LEFT_ORIGIN
+	sprite.z_index = 4
+	wall_left_layer.add_child(sprite)
+	_wall_left_tiles.append(sprite)
 
 
 func _build_wall_right() -> void:
 	for child in wall_right_layer.get_children():
 		child.queue_free()
 	_wall_right_tiles.clear()
-	for x in ROOM_SIZE.x:
-		var sprite := Sprite2D.new()
-		sprite.centered = false
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		var anchor := IsoMath.grid_to_screen(Vector2i(x, 0))
-		sprite.position = anchor - Vector2(0, WALL_HEIGHT)
-		sprite.z_index = 4 + x
-		wall_right_layer.add_child(sprite)
-		_wall_right_tiles.append(sprite)
+	var sprite := Sprite2D.new()
+	sprite.centered = false
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.position = WALL_RIGHT_ORIGIN
+	sprite.z_index = 3
+	wall_right_layer.add_child(sprite)
+	_wall_right_tiles.append(sprite)
 
 
 
@@ -417,24 +537,20 @@ func _build_wallpaper() -> void:
 		child.queue_free()
 	_wallpaper_left_tiles.clear()
 	_wallpaper_right_tiles.clear()
-	for y in ROOM_SIZE.y:
-		var sprite := Sprite2D.new()
-		sprite.centered = false
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		var anchor := IsoMath.grid_to_screen(Vector2i(0, y))
-		sprite.position = anchor - Vector2(IsoMath.TILE_W / 2, WALL_HEIGHT)
-		sprite.z_index = 5 + y + 1
-		wallpaper_left_layer.add_child(sprite)
-		_wallpaper_left_tiles.append(sprite)
-	for x in ROOM_SIZE.x:
-		var sprite := Sprite2D.new()
-		sprite.centered = false
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		var anchor := IsoMath.grid_to_screen(Vector2i(x, 0))
-		sprite.position = anchor - Vector2(0, WALL_HEIGHT)
-		sprite.z_index = 4 + x + 1
-		wallpaper_right_layer.add_child(sprite)
-		_wallpaper_right_tiles.append(sprite)
+	var left := Sprite2D.new()
+	left.centered = false
+	left.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	left.position = WALL_LEFT_ORIGIN
+	left.z_index = 5
+	wallpaper_left_layer.add_child(left)
+	_wallpaper_left_tiles.append(left)
+	var right := Sprite2D.new()
+	right.centered = false
+	right.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	right.position = WALL_RIGHT_ORIGIN
+	right.z_index = 4
+	wallpaper_right_layer.add_child(right)
+	_wallpaper_right_tiles.append(right)
 
 
 func _build_window() -> void:
@@ -444,9 +560,8 @@ func _build_window() -> void:
 	_window_sprite.centered = false
 	_window_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	var anchor := IsoMath.grid_to_screen(Vector2i(WINDOW_SLOT_X, 0))
-	# Sobre la pared derecha, un poco centrada en el panel.
-	_window_sprite.position = anchor + Vector2(2, -WALL_HEIGHT + 10)
-	_window_sprite.z_index = 6 + WINDOW_SLOT_X
+	_window_sprite.position = anchor + Vector2(-10, -WALL_HEIGHT + 18)
+	_window_sprite.z_index = 6
 	window_layer.add_child(_window_sprite)
 
 
@@ -531,11 +646,7 @@ func _build_tabs() -> void:
 	_add_tab_button(tab_bar, "Papel", "wallpaper")
 	_add_tab_button(tab_bar, "Vent", "window")
 	_add_tab_button(tab_bar, "Luz", "light")
-	_add_tab_button(item_tab_bar, "Alfom", "rug")
-	_add_tab_button(item_tab_bar, "Cama", "bed")
-	_add_tab_button(item_tab_bar, "Plato", "bowl")
-	_add_tab_button(item_tab_bar, "Rasca", "scratcher")
-	_add_tab_button(item_tab_bar, "Pelota", "toy")
+	# Fila de muebles reemplazada por catálogo lateral drag-and-drop.
 
 
 func _add_tab_button(parent: HBoxContainer, label: String, target: String) -> void:
