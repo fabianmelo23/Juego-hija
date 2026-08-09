@@ -136,8 +136,8 @@ Trabajamos **uno por uno**. No se salta de categoría sin cerrar el shell.
 
 ### Fase P0 — Habitación existe
 1. **01 `floor_base`** ✅ hecho (3 variantes de piso)  
-2. **02 `wall_left`** ← siguiente  
-3. **03 `wall_right`**  
+2. **02 `wall_left`** ✅ hecho (crema / rubor / salvia)  
+3. **03 `wall_right`** ← siguiente  
 4. Validación visual en celular (APK)
 
 ### Fase P1 — Habitación respira
