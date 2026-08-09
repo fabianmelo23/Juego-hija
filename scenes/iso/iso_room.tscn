@@ -26,6 +26,8 @@ polygon = PackedVector2Array(-200, -200, 920, -200, 920, 1500, -200, 1500)
 
 [node name="RugLayer" type="Node2D" parent="RoomRoot"]
 
+[node name="FurnitureLayer" type="Node2D" parent="RoomRoot"]
+
 [node name="LightLayer" type="Node2D" parent="RoomRoot"]
 
 [node name="IsoHUD" type="CanvasLayer" parent="."]
@@ -57,7 +59,7 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.28, 0.22, 0.18, 1)
 theme_override_font_sizes/font_size = 18
-text = "Ítem 15: Alfombra chica"
+text = "Ítem 19: Cama de gato"
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="IsoHUD/Safe/VBox"]
@@ -67,7 +69,11 @@ mouse_filter = 2
 
 [node name="TabBar" type="HBoxContainer" parent="IsoHUD/Safe/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
+
+[node name="ItemTabBar" type="HBoxContainer" parent="IsoHUD/Safe/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="VariantBar" type="HBoxContainer" parent="IsoHUD/Safe/VBox"]
 layout_mode = 2

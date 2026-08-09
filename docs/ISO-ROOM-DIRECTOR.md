@@ -147,8 +147,8 @@ Trabajamos **uno por uno**. No se salta de categoría sin cerrar el shell.
 8. **15 `rug_small`** ✅ hecho (Ninguna / Rubor / Salvia / Cielo) — **P1 cerrado**
 
 ### Fase P2 — Habitación jugable con gatos
-9. **19 `bed_cat`** ← siguiente  
-10. **20 `bowl_food`**  
+9. **19 `bed_cat`** ✅ hecho (Ninguna / Crema / Rubor / Menta)  
+10. **20 `bowl_food`** ← siguiente  
 11. **22 `scratcher`**  
 12. **24 `toy_ball`**  
 13. Migrar Miel + cuidados al cuarto iso  
@@ -210,4 +210,4 @@ Hasta que el shell (piso + 2 paredes) no esté sólido, no avanzamos a 20 mueble
 
 ## 10. Siguiente acción inmediata
 
-**Crear Ítem 19 — `bed_cat`:** cama de gato 2×2 (primer mueble felino jugable).
+**Crear Ítem 20 — `bowl_food`:** plato de comida 1×1 (gancho de cuidados).

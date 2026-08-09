@@ -15,7 +15,8 @@ Catálogo y orden de creación: [`docs/ISO-ROOM-DIRECTOR.md`](docs/ISO-ROOM-DIRE
 - ✅ **Ítem 11 — Lámpara de techo** (Cálida / Rosa / Apagada)
 - ✅ **Ítem 04 — Papel tapiz** (Ninguno / Puntos / Rayas)
 - ✅ **Ítem 15 — Alfombra chica** (Ninguna / Rubor / Salvia / Cielo)
-- 🔜 Ítem 19 — Cama de gato
+- ✅ **Ítem 19 — Cama de gato** (Ninguna / Crema / Rubor / Menta)
+- 🔜 Ítem 20 — Plato de comida
 
 ## APK de prueba
 

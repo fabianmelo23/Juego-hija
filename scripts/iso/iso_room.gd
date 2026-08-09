@@ -1,5 +1,5 @@
 extends Node2D
-## Shell isométrico: shell, aberturas, luz, papel y alfombra.
+## Cuarto isométrico: shell, atmósfera y primer mueble felino.
 
 signal floor_changed(variant_id: String)
 signal wall_left_changed(variant_id: String)
@@ -8,15 +8,18 @@ signal window_changed(variant_id: String)
 signal light_changed(variant_id: String)
 signal wallpaper_changed(variant_id: String)
 signal rug_changed(variant_id: String)
+signal bed_changed(variant_id: String)
 
 const ROOM_SIZE := Vector2i(8, 8)
 const WALL_HEIGHT := 64
 const WINDOW_SLOT_X := 3 # posición en la pared derecha
 const RUG_ORIGIN := Vector2i(3, 3) # huella 2×2
+const BED_ORIGIN := Vector2i(5, 2) # huella ~2×2
 
 @onready var room_root: Node2D = $RoomRoot
 @onready var floor_layer: Node2D = $RoomRoot/FloorLayer
 @onready var rug_layer: Node2D = $RoomRoot/RugLayer
+@onready var furniture_layer: Node2D = $RoomRoot/FurnitureLayer
 @onready var wall_left_layer: Node2D = $RoomRoot/WallLeftLayer
 @onready var wall_right_layer: Node2D = $RoomRoot/WallRightLayer
 @onready var wallpaper_left_layer: Node2D = $RoomRoot/WallpaperLeftLayer
@@ -27,6 +30,7 @@ const RUG_ORIGIN := Vector2i(3, 3) # huella 2×2
 @onready var title_label: Label = $IsoHUD/Safe/VBox/Title
 @onready var hint_label: Label = $IsoHUD/Safe/VBox/Hint
 @onready var tab_bar: HBoxContainer = $IsoHUD/Safe/VBox/TabBar
+@onready var item_tab_bar: HBoxContainer = $IsoHUD/Safe/VBox/ItemTabBar
 @onready var variant_bar: HBoxContainer = $IsoHUD/Safe/VBox/VariantBar
 
 var _floor_textures: Dictionary = {}
@@ -37,6 +41,7 @@ var _light_textures: Dictionary = {}
 var _wallpaper_left_textures: Dictionary = {}
 var _wallpaper_right_textures: Dictionary = {}
 var _rug_textures: Dictionary = {}
+var _bed_textures: Dictionary = {}
 var _floor_tiles: Dictionary = {}
 var _wall_left_tiles: Array[Sprite2D] = []
 var _wall_right_tiles: Array[Sprite2D] = []
@@ -45,6 +50,7 @@ var _wallpaper_right_tiles: Array[Sprite2D] = []
 var _window_sprite: Sprite2D
 var _light_sprite: Sprite2D
 var _rug_sprite: Sprite2D
+var _bed_sprite: Sprite2D
 
 var _current_floor: String = "floor_wood_light"
 var _current_wall_left: String = "wall_left_cream"
@@ -53,7 +59,8 @@ var _current_window: String = "window_small_day"
 var _current_light: String = "light_ceiling_warm"
 var _current_wallpaper: String = "wallpaper_none"
 var _current_rug: String = "rug_small_blush"
-var _edit_target: String = "rug"
+var _current_bed: String = "bed_cat_blush"
+var _edit_target: String = "bed"
 
 var _floor_variants := [
 	{"id": "floor_wood_light", "name": "Madera clara"},
@@ -98,6 +105,13 @@ var _rug_variants := [
 	{"id": "rug_small_sky", "name": "Cielo"},
 ]
 
+var _bed_variants := [
+	{"id": "bed_cat_none", "name": "Ninguna"},
+	{"id": "bed_cat_cream", "name": "Crema"},
+	{"id": "bed_cat_blush", "name": "Rubor"},
+	{"id": "bed_cat_mint", "name": "Menta"},
+]
+
 
 func _ready() -> void:
 	_load_textures()
@@ -109,6 +123,7 @@ func _ready() -> void:
 	_build_window()
 	_build_light()
 	_build_rug()
+	_build_bed()
 	_build_tabs()
 	_rebuild_variant_buttons()
 	title_label.text = "Casa de Gatos — Cuarto iso"
@@ -119,7 +134,8 @@ func _ready() -> void:
 	set_window_variant(_current_window)
 	set_light_variant(_current_light)
 	set_rug_variant(_current_rug)
-	_set_edit_target("rug")
+	set_bed_variant(_current_bed)
+	_set_edit_target("bed")
 
 
 func _load_textures() -> void:
@@ -148,6 +164,12 @@ func _load_textures() -> void:
 			_rug_textures[rid] = null
 		else:
 			_rug_textures[rid] = load("res://assets/art/iso/rugs/%s.png" % rid)
+	for v in _bed_variants:
+		var bid := str(v["id"])
+		if bid == "bed_cat_none":
+			_bed_textures[bid] = null
+		else:
+			_bed_textures[bid] = load("res://assets/art/iso/furniture/%s.png" % bid)
 
 
 func _center_room() -> void:
@@ -269,29 +291,46 @@ func _build_rug() -> void:
 	rug_layer.add_child(_rug_sprite)
 
 
+
+func _build_bed() -> void:
+	for child in furniture_layer.get_children():
+		child.queue_free()
+	_bed_sprite = Sprite2D.new()
+	_bed_sprite.centered = false
+	_bed_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var anchor := IsoMath.grid_to_screen(BED_ORIGIN)
+	# Sprite 96×64 anclado al tip norte del tile origen.
+	_bed_sprite.position = anchor - Vector2(48, 28)
+	_bed_sprite.z_index = 30 + BED_ORIGIN.x + BED_ORIGIN.y
+	furniture_layer.add_child(_bed_sprite)
+
+
 func _build_tabs() -> void:
 	for child in tab_bar.get_children():
 		child.queue_free()
-	_add_tab_button("Piso", "floor")
-	_add_tab_button("Izq", "wall_left")
-	_add_tab_button("Der", "wall_right")
-	_add_tab_button("Papel", "wallpaper")
-	_add_tab_button("Vent", "window")
-	_add_tab_button("Luz", "light")
-	_add_tab_button("Alfom", "rug")
+	for child in item_tab_bar.get_children():
+		child.queue_free()
+	_add_tab_button(tab_bar, "Piso", "floor")
+	_add_tab_button(tab_bar, "Izq", "wall_left")
+	_add_tab_button(tab_bar, "Der", "wall_right")
+	_add_tab_button(tab_bar, "Papel", "wallpaper")
+	_add_tab_button(tab_bar, "Vent", "window")
+	_add_tab_button(tab_bar, "Luz", "light")
+	_add_tab_button(item_tab_bar, "Alfom", "rug")
+	_add_tab_button(item_tab_bar, "Cama", "bed")
 
 
-func _add_tab_button(label: String, target: String) -> void:
+func _add_tab_button(parent: HBoxContainer, label: String, target: String) -> void:
 	var button := Button.new()
 	button.focus_mode = Control.FOCUS_NONE
-	button.custom_minimum_size = Vector2(0, 52)
+	button.custom_minimum_size = Vector2(0, 48)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.add_theme_font_size_override("font_size", 11)
+	button.add_theme_font_size_override("font_size", 14)
 	button.text = label
 	button.pressed.connect(func() -> void:
 		_set_edit_target(target)
 	)
-	tab_bar.add_child(button)
+	parent.add_child(button)
 
 
 func _set_edit_target(target: String) -> void:
@@ -312,6 +351,8 @@ func _set_edit_target(target: String) -> void:
 			hint_label.text = "Editando: Papel · %s" % _nice_name(_wallpaper_variants, _current_wallpaper)
 		"rug":
 			hint_label.text = "Editando: Alfombra · %s" % _nice_name(_rug_variants, _current_rug)
+		"bed":
+			hint_label.text = "Editando: Cama · %s" % _nice_name(_bed_variants, _current_bed)
 
 
 func _variants_for_target() -> Array:
@@ -328,6 +369,8 @@ func _variants_for_target() -> Array:
 			return _wallpaper_variants
 		"rug":
 			return _rug_variants
+		"bed":
+			return _bed_variants
 		_:
 			return _floor_variants
 
@@ -359,6 +402,8 @@ func _rebuild_variant_buttons() -> void:
 					set_wallpaper_variant(id)
 				"rug":
 					set_rug_variant(id)
+				"bed":
+					set_bed_variant(id)
 		)
 		variant_bar.add_child(button)
 
@@ -478,6 +523,19 @@ func set_rug_variant(variant_id: String) -> void:
 	rug_changed.emit(variant_id)
 
 
+
+func set_bed_variant(variant_id: String) -> void:
+	if not _bed_textures.has(variant_id) or _bed_sprite == null:
+		return
+	_current_bed = variant_id
+	var tex = _bed_textures[variant_id]
+	_bed_sprite.texture = tex
+	_bed_sprite.visible = tex != null
+	if _edit_target == "bed":
+		hint_label.text = "Editando: Cama · %s" % _nice_name(_bed_variants, variant_id)
+	bed_changed.emit(variant_id)
+
+
 func get_current_floor_variant() -> String:
 	return _current_floor
 
@@ -502,6 +560,11 @@ func get_current_wallpaper_variant() -> String:
 
 func get_current_rug_variant() -> String:
 	return _current_rug
+
+func get_current_bed_variant() -> String:
+	return _current_bed
+
+
 
 
 
