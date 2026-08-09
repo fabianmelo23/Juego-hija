@@ -8,31 +8,32 @@ Juego 2D pixel art para **Android**, pensado para una niña de 11 años a la que
 **Arte inicial:** placeholders.  
 **Avatar:** personaje inventado.
 
-## Instalación (entorno de desarrollo)
+## Qué hay de nuevo (Hito 1)
 
-Ya hay un instalador automático de Godot 4.3:
+- Aparece **Miel**, tu primer gato
+- Tócala para ver **Hambre / Energía / Felicidad**
+- Botones: **Comer · Mimos · Jugar · Dormir**
+- Cada cuidado bueno suma **Huellitas**
+
+## Cómo probar (PC / entorno de desarrollo)
 
 ```bash
 bash tools/install_godot.sh
-```
-
-Eso deja el comando `godot` listo e importa el proyecto.
-
-Para abrir el prototipo:
-
-```bash
 godot --path .
 ```
 
-O en Godot: **Import** → carpeta del proyecto → Play (F5).  
-Haz clic/tocar el suelo para caminar.
+1. Toca / clic en **Miel**
+2. Usa los botones de cuidado
+3. Camina tocando el suelo
 
-## Estado actual
+## Seguir el avance desde el celular
 
-**Hito 0 listo:** mapa casa+jardín, tap-to-move, HUD táctil, Huellitas.  
-Diseño: [`docs/GDD-v1.md`](docs/GDD-v1.md)
+- Chat de Cursor (este hilo)
+- PR: https://github.com/fabianmelo23/Juego-hija/pull/1
+- Repo: https://github.com/fabianmelo23/Juego-hija
 
-## Nota sobre el celular
+Para **jugar en el teléfono de ella** hace falta el APK (más adelante).
 
-La instalación en el teléfono Android de ella se hace con un archivo APK (más adelante).  
-Desde aquí se prepara el juego; en el teléfono solo hay que permitir instalar e instalar el APK.
+## Diseño
+
+[`docs/GDD-v1.md`](docs/GDD-v1.md)

@@ -284,10 +284,10 @@ casa-de-gatos/
 - Cámara suave + colisiones básicas
 - Botones UI táctiles de prueba
 
-### Hito 1 — Primer gato vivo
-- Gato con 3 necesidades
-- Alimentar / acariciar / dormir con botones grandes
-- Feedback visual claro en pantalla chica
+### Hito 1 — Primer gato vivo ✅
+- Gata Miel con 3 necesidades
+- Alimentar / acariciar / jugar / dormir con botones grandes
+- Feedback visual claro en pantalla chica + Huellitas por cuidado
 
 ### Hito 2 — Decoración
 - Inventario + colocar 4–5 muebles con snap a cuadrícula
@@ -330,5 +330,6 @@ Si eso ocurre, el juego ya ganó. El resto es expansión.
 
 ## 15. Estado de implementación
 
-- **Hito 0 listo (esqueleto):** proyecto Godot 4, mapa casa+jardín placeholder, tap-to-move, cámara suave, HUD táctil (Mochila / Misión / Cuidar / Menú), contador de Huellitas.
-- Siguiente: **Hito 1** — primer gato con 3 necesidades e interacciones táctiles.
+- **Hito 0 listo:** esqueleto móvil (mapa, tap-to-move, HUD, Huellitas).
+- **Hito 1 listo:** gata **Miel** con Hambre / Energía / Felicidad; acciones Comer, Mimos, Jugar, Dormir; recompensa en Huellitas.
+- Siguiente: **Hito 2** — decorar habitación (inventario + colocar muebles).

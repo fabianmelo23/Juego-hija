@@ -1,0 +1,55 @@
+[gd_scene load_steps=2 format=3 uid="uid://bqcatmiel001"]
+
+[ext_resource type="Script" path="res://scripts/cats/cat.gd" id="1_cat"]
+
+[node name="Cat" type="Node2D"]
+script = ExtResource("1_cat")
+
+[node name="SelectionRing" type="Polygon2D" parent="."]
+z_index = -1
+color = Color(1, 0.92, 0.45, 0.55)
+polygon = PackedVector2Array(-36, 8, 36, 8, 40, 2, 0, -8, -40, 2)
+
+[node name="Body" type="Polygon2D" parent="."]
+color = Color(0.92, 0.74, 0.42, 1)
+polygon = PackedVector2Array(-22, 0, 22, 0, 24, -18, 10, -28, -10, -28, -24, -18)
+
+[node name="Head" type="Polygon2D" parent="."]
+position = Vector2(18, -22)
+color = Color(0.92, 0.74, 0.42, 1)
+polygon = PackedVector2Array(-12, 8, 12, 8, 14, -6, 4, -16, -4, -16, -14, -6)
+
+[node name="EarL" type="Polygon2D" parent="."]
+position = Vector2(10, -40)
+color = Color(0.85, 0.62, 0.32, 1)
+polygon = PackedVector2Array(-4, 8, 2, 8, -1, -6)
+
+[node name="EarR" type="Polygon2D" parent="."]
+position = Vector2(26, -40)
+color = Color(0.85, 0.62, 0.32, 1)
+polygon = PackedVector2Array(-2, 8, 4, 8, 1, -6)
+
+[node name="Tail" type="Polygon2D" parent="."]
+position = Vector2(-22, -10)
+color = Color(0.85, 0.62, 0.32, 1)
+polygon = PackedVector2Array(0, 6, 8, 2, 4, -18, -4, -10)
+
+[node name="NameLabel" type="Label" parent="."]
+offset_left = -60.0
+offset_top = -68.0
+offset_right = 70.0
+offset_bottom = -42.0
+theme_override_colors/font_color = Color(0.2, 0.14, 0.1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Miel"
+horizontal_alignment = 1
+
+[node name="MoodLabel" type="Label" parent="."]
+offset_left = -70.0
+offset_top = 10.0
+offset_right = 80.0
+offset_bottom = 36.0
+theme_override_colors/font_color = Color(0.28, 0.2, 0.14, 1)
+theme_override_font_sizes/font_size = 16
+text = "contenta"
+horizontal_alignment = 1
