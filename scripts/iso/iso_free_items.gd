@@ -1,7 +1,9 @@
 extends Node2D
-## Ítems colocables en posición libre (no atados a un tile) + apilado simple.
+## Ítems colocables: mover, quitar, girar 360° y apilado simple.
 
 signal item_placed(item_id: String, variant_id: String)
+signal item_removed(item_id: String)
+signal selection_changed(item_id: String)
 
 const SAVE_PATH := "user://iso_free_layout_v2.json"
 
@@ -15,9 +17,11 @@ const DEFS := {
 	"toy": {"variants": ["toy_ball_red", "toy_ball_sky", "toy_ball_sun"], "default": "toy_ball_red", "stack_h": 0.0, "z_base": 40, "anchor": Vector2(16, 8)},
 }
 
-var _items: Dictionary = {} # item_id -> {variant, pos: Vector2, height: float, sprite: Sprite2D}
+var _items: Dictionary = {} # item_id -> {variant, pos, height, rot, sprite}
 var _ghost: Sprite2D
 var _textures: Dictionary = {}
+var _selected_id: String = ""
+var _ghost_rot: float = 0.0
 
 
 func _ready() -> void:
@@ -53,37 +57,88 @@ func get_variant(item_id: String) -> String:
 	return str(_items[item_id].get("variant", ""))
 
 
+func get_rotation_deg(item_id: String) -> float:
+	if not _items.has(item_id):
+		return 0.0
+	return float(_items[item_id].get("rot", 0.0))
+
+
+func get_selected_id() -> String:
+	return _selected_id
+
+
+func select_item(item_id: String) -> void:
+	if item_id != "" and not _items.has(item_id):
+		item_id = ""
+	if _selected_id == item_id:
+		_refresh_selection_visual()
+		return
+	_selected_id = item_id
+	_refresh_selection_visual()
+	selection_changed.emit(_selected_id)
+
+
+func clear_selection() -> void:
+	select_item("")
+
+
 func begin_ghost(item_id: String, variant_id: String) -> void:
 	var tex: Texture2D = _tex(item_id, variant_id)
+	var d: Dictionary = DEFS.get(item_id, {})
+	var anchor: Vector2 = d.get("anchor", Vector2.ZERO)
 	_ghost.texture = tex
+	_ghost.offset = -anchor
+	_ghost_rot = get_rotation_deg(item_id) if _items.has(item_id) else 0.0
+	_ghost.rotation_degrees = _ghost_rot
 	_ghost.visible = tex != null
 
 
 func update_ghost_at(local_pos: Vector2, item_id: String) -> void:
-	var d: Dictionary = DEFS.get(item_id, {})
-	var anchor: Vector2 = d.get("anchor", Vector2.ZERO)
 	var height := _stack_height_at(local_pos, item_id)
-	_ghost.position = local_pos - anchor + Vector2(0, -height)
+	_ghost.position = local_pos + Vector2(0, -height)
+	_ghost.rotation_degrees = _ghost_rot
 	_ghost.z_index = 200
 	_ghost.visible = true
+
+
+func set_ghost_rotation(degrees: float) -> void:
+	_ghost_rot = fposmod(degrees, 360.0)
+	_ghost.rotation_degrees = _ghost_rot
 
 
 func hide_ghost() -> void:
 	_ghost.visible = false
 
 
-func place_or_move(item_id: String, variant_id: String, local_pos: Vector2) -> void:
+func set_item_visible(item_id: String, visible: bool) -> void:
+	if not _items.has(item_id):
+		return
+	var sprite: Sprite2D = _items[item_id].get("sprite")
+	if sprite and is_instance_valid(sprite):
+		sprite.visible = visible and sprite.texture != null
+
+
+func place_or_move(item_id: String, variant_id: String, local_pos: Vector2, rot_degrees: Variant = null) -> void:
 	if not DEFS.has(item_id):
 		return
 	var d: Dictionary = DEFS[item_id]
 	if variant_id == "" or not _textures[item_id].has(variant_id):
 		variant_id = str(d["default"])
 	var height := _stack_height_at(local_pos, item_id)
+	var rot := 0.0
+	if rot_degrees != null:
+		rot = fposmod(float(rot_degrees), 360.0)
+	elif _items.has(item_id):
+		rot = float(_items[item_id].get("rot", 0.0))
+	else:
+		rot = fposmod(_ghost_rot, 360.0)
+
 	if _items.has(item_id):
 		var entry: Dictionary = _items[item_id]
 		entry["variant"] = variant_id
 		entry["pos"] = local_pos
 		entry["height"] = height
+		entry["rot"] = rot
 		_apply_sprite(item_id)
 	else:
 		var sprite := Sprite2D.new()
@@ -95,10 +150,12 @@ func place_or_move(item_id: String, variant_id: String, local_pos: Vector2) -> v
 			"variant": variant_id,
 			"pos": local_pos,
 			"height": height,
+			"rot": rot,
 			"sprite": sprite,
 		}
 		_apply_sprite(item_id)
 	hide_ghost()
+	select_item(item_id)
 	save_layout()
 	item_placed.emit(item_id, variant_id)
 
@@ -111,6 +168,20 @@ func set_variant(item_id: String, variant_id: String) -> void:
 	save_layout()
 
 
+func rotate_by(item_id: String, delta_degrees: float) -> void:
+	if not _items.has(item_id):
+		return
+	set_rotation_deg(item_id, float(_items[item_id].get("rot", 0.0)) + delta_degrees)
+
+
+func set_rotation_deg(item_id: String, degrees: float) -> void:
+	if not _items.has(item_id):
+		return
+	_items[item_id]["rot"] = fposmod(degrees, 360.0)
+	_apply_sprite(item_id)
+	save_layout()
+
+
 func remove_item(item_id: String) -> void:
 	if not _items.has(item_id):
 		return
@@ -118,7 +189,27 @@ func remove_item(item_id: String) -> void:
 	if sprite:
 		sprite.queue_free()
 	_items.erase(item_id)
+	if _selected_id == item_id:
+		_selected_id = ""
+		selection_changed.emit("")
 	save_layout()
+	item_removed.emit(item_id)
+
+
+func pick_at(local_pos: Vector2) -> String:
+	var best_id := ""
+	var best_z := -100000
+	for item_id in _items.keys():
+		var sprite: Sprite2D = _items[item_id].get("sprite")
+		if sprite == null or not is_instance_valid(sprite) or sprite.texture == null or not sprite.visible:
+			continue
+		var inv := sprite.transform.affine_inverse()
+		var p: Vector2 = inv * local_pos
+		var rect := sprite.get_rect().grow(12.0)
+		if rect.has_point(p) and sprite.z_index >= best_z:
+			best_z = sprite.z_index
+			best_id = str(item_id)
+	return best_id
 
 
 func _apply_sprite(item_id: String) -> void:
@@ -130,9 +221,26 @@ func _apply_sprite(item_id: String) -> void:
 	var anchor: Vector2 = d["anchor"]
 	var pos: Vector2 = entry["pos"]
 	var height: float = float(entry.get("height", 0.0))
-	sprite.position = pos - anchor + Vector2(0, -height)
+	var rot: float = float(entry.get("rot", 0.0))
+	sprite.centered = false
+	sprite.offset = -anchor
+	sprite.position = pos + Vector2(0, -height)
+	sprite.rotation_degrees = rot
 	sprite.z_index = int(d["z_base"]) + int(pos.y) + int(height)
 	sprite.visible = sprite.texture != null
+	_refresh_selection_visual()
+
+
+func _refresh_selection_visual() -> void:
+	for item_id in _items.keys():
+		var sprite: Sprite2D = _items[item_id].get("sprite")
+		if sprite == null or not is_instance_valid(sprite):
+			continue
+		if item_id == _selected_id:
+			sprite.modulate = Color(1.08, 1.02, 0.92, 1.0)
+			sprite.z_index = maxi(sprite.z_index, 180)
+		else:
+			sprite.modulate = Color(1, 1, 1, 1)
 
 
 func _tex(item_id: String, variant_id: String) -> Texture2D:
@@ -142,7 +250,6 @@ func _tex(item_id: String, variant_id: String) -> Texture2D:
 
 
 func _stack_height_at(local_pos: Vector2, moving_id: String) -> float:
-	# Si cae cerca del centro de una mesa (u otro con stack_h), súbelo.
 	var best_h := 0.0
 	var best_dist := 36.0
 	for item_id in _items.keys():
@@ -169,6 +276,7 @@ func save_layout() -> void:
 			"variant": e["variant"],
 			"pos": [pos.x, pos.y],
 			"height": e.get("height", 0.0),
+			"rot": e.get("rot", 0.0),
 		}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -177,8 +285,6 @@ func save_layout() -> void:
 
 
 func load_layout() -> void:
-	# Por defecto el cuarto nace vacío: solo piso/paredes/gato.
-	# Las decoraciones viven en el inventario hasta que el jugador las coloque.
 	if not FileAccess.file_exists(SAVE_PATH):
 		return
 	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
@@ -198,19 +304,22 @@ func load_layout() -> void:
 		var pos := Vector2(float(arr[0]), float(arr[1])) if typeof(arr) == TYPE_ARRAY and arr.size() >= 2 else Vector2.ZERO
 		var variant := str(e.get("variant", DEFS[item_id]["default"]))
 		var height := float(e.get("height", 0.0))
+		var rot := fposmod(float(e.get("rot", 0.0)), 360.0)
 		var sprite := Sprite2D.new()
 		sprite.name = str(item_id).capitalize()
 		sprite.centered = false
 		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		add_child(sprite)
-		_items[item_id] = {"variant": variant, "pos": pos, "height": height, "sprite": sprite}
+		_items[item_id] = {"variant": variant, "pos": pos, "height": height, "rot": rot, "sprite": sprite}
 		_apply_sprite(item_id)
 
 
-func clear_all() -> void:
+func clear_all(persist: bool = true) -> void:
 	for item_id in _items.keys():
 		var sprite: Sprite2D = _items[item_id].get("sprite")
 		if sprite:
 			sprite.queue_free()
 	_items.clear()
-	save_layout()
+	_selected_id = ""
+	if persist:
+		save_layout()

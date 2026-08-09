@@ -43,7 +43,12 @@ const TOY_ORIGIN := Vector2i(4, 5)
 @onready var free_items: Node2D = $RoomRoot/FreeItems
 var camera_ctrl: Node
 var catalog_ui: Control
+var item_edit_bar: PanelContainer
+var _rot_value_label: Label
 var _drag_active := false
+var _room_move_active := false
+var _room_move_id: String = ""
+var _rotate_hold_dir: float = 0.0
 @onready var hint_label: Label = $IsoHUD/Safe/VBox/Hint
 @onready var tab_bar: HBoxContainer = $IsoHUD/Safe/VBox/TabBar
 @onready var item_tab_bar: HBoxContainer = $IsoHUD/Safe/VBox/ItemTabBar
@@ -257,7 +262,7 @@ func _build_mode_bar() -> void:
 					if camera_ctrl:
 						camera_ctrl.pan_enabled = true
 					_refresh_mode_button_styles("decorate")
-					hint_label.text = "Arrastra del catálogo al cuarto · pellizca = zoom"
+					hint_label.text = "Arrastra al cuarto · toca un mueble para mover / girar / quitar"
 					_set_edit_target(_edit_target)
 				"mission":
 					gameplay.open_mission()
@@ -296,8 +301,22 @@ func _refresh_mode_button_styles(active: String) -> void:
 			CasaUiTheme.apply_button(child, "primary" if id == active else "secondary", 15)
 
 
+func _process(delta: float) -> void:
+	if _rotate_hold_dir == 0.0 or free_items == null:
+		return
+	var sid: String = free_items.get_selected_id()
+	if sid == "":
+		return
+	# ~120°/s al mantener pulsado → giro continuo 360°.
+	free_items.rotate_by(sid, _rotate_hold_dir * 120.0 * delta)
+	_refresh_rot_label()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if _drag_active:
+		return
+	if _handle_decorate_item_input(event):
+		get_viewport().set_input_as_handled()
 		return
 	if camera_ctrl and camera_ctrl.handle_input(event):
 		get_viewport().set_input_as_handled()
@@ -363,6 +382,15 @@ func _setup_camera_and_catalog() -> void:
 			if catalog_ui:
 				catalog_ui.refresh()
 		)
+		free_items.item_removed.connect(func(item_id: String) -> void:
+			inventory.add(item_id, 1)
+			if catalog_ui:
+				catalog_ui.refresh()
+			gameplay.show_toast("Guardado en la mochila")
+		)
+		free_items.selection_changed.connect(_on_item_selection_changed)
+
+	_build_item_edit_bar()
 
 	# Zoom buttons
 	var zoom_bar := HBoxContainer.new()
@@ -386,13 +414,249 @@ func _setup_camera_and_catalog() -> void:
 func _set_catalog_visible(v: bool) -> void:
 	if catalog_ui:
 		catalog_ui.visible = v
+	if not v and free_items:
+		free_items.clear_selection()
+	if item_edit_bar and not v:
+		item_edit_bar.visible = false
+
+
+func _build_item_edit_bar() -> void:
+	item_edit_bar = PanelContainer.new()
+	item_edit_bar.name = "ItemEditBar"
+	item_edit_bar.visible = false
+	CasaUiTheme.apply_panel(item_edit_bar, "panel")
+	item_edit_bar.anchor_left = 0.0
+	item_edit_bar.anchor_top = 1.0
+	item_edit_bar.anchor_right = 1.0
+	item_edit_bar.anchor_bottom = 1.0
+	item_edit_bar.offset_left = 12.0
+	item_edit_bar.offset_right = -12.0
+	item_edit_bar.offset_top = -210.0
+	item_edit_bar.offset_bottom = -118.0
+	$IsoHUD.add_child(item_edit_bar)
+
+	var root := VBoxContainer.new()
+	root.add_theme_constant_override("separation", 8)
+	item_edit_bar.add_child(root)
+
+	var title := Label.new()
+	title.name = "EditTitle"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.text = "Editar mueble"
+	CasaUiTheme.apply_label(title, "subtitle", 16)
+	root.add_child(title)
+
+	var rot_row := HBoxContainer.new()
+	rot_row.add_theme_constant_override("separation", 8)
+	root.add_child(rot_row)
+
+	var left := Button.new()
+	left.text = "↺"
+	left.custom_minimum_size = Vector2(56, 48)
+	CasaUiTheme.apply_button(left, "secondary", 22)
+	_wire_rotate_hold(left, -1.0)
+	rot_row.add_child(left)
+
+	_rot_value_label = Label.new()
+	_rot_value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_rot_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_rot_value_label.text = "0°"
+	CasaUiTheme.apply_label(_rot_value_label, "accent", 20)
+	rot_row.add_child(_rot_value_label)
+
+	var right := Button.new()
+	right.text = "↻"
+	right.custom_minimum_size = Vector2(56, 48)
+	CasaUiTheme.apply_button(right, "secondary", 22)
+	_wire_rotate_hold(right, 1.0)
+	rot_row.add_child(right)
+
+	var step_row := HBoxContainer.new()
+	step_row.add_theme_constant_override("separation", 8)
+	root.add_child(step_row)
+	for label_delta in [["-45°", -45.0], ["+45°", 45.0], ["180°", 180.0]]:
+		var b := Button.new()
+		b.text = str(label_delta[0])
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.custom_minimum_size = Vector2(0, 44)
+		CasaUiTheme.apply_button(b, "ghost", 14)
+		var deg := float(label_delta[1])
+		b.pressed.connect(func() -> void:
+			var sid: String = free_items.get_selected_id()
+			if sid == "":
+				return
+			if deg == 180.0:
+				free_items.set_rotation_deg(sid, free_items.get_rotation_deg(sid) + 180.0)
+			else:
+				free_items.rotate_by(sid, deg)
+			_refresh_rot_label()
+		)
+		step_row.add_child(b)
+
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	root.add_child(actions)
+
+	var remove_btn := Button.new()
+	remove_btn.text = "Quitar"
+	remove_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	remove_btn.custom_minimum_size = Vector2(0, 48)
+	CasaUiTheme.apply_button(remove_btn, "danger", 16)
+	remove_btn.pressed.connect(_remove_selected_item)
+	actions.add_child(remove_btn)
+
+	var done_btn := Button.new()
+	done_btn.text = "Listo"
+	done_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	done_btn.custom_minimum_size = Vector2(0, 48)
+	CasaUiTheme.apply_button(done_btn, "primary", 16)
+	done_btn.pressed.connect(func() -> void:
+		if free_items:
+			free_items.clear_selection()
+	)
+	actions.add_child(done_btn)
+
+
+func _wire_rotate_hold(button: Button, direction: float) -> void:
+	button.button_down.connect(func() -> void:
+		_rotate_hold_dir = direction
+		var sid: String = free_items.get_selected_id()
+		if sid != "":
+			free_items.rotate_by(sid, direction * 15.0)
+			_refresh_rot_label()
+	)
+	button.button_up.connect(func() -> void:
+		if _rotate_hold_dir == direction:
+			_rotate_hold_dir = 0.0
+	)
+	button.pressed.connect(func() -> void:
+		# safety: soltar
+		if _rotate_hold_dir == direction:
+			_rotate_hold_dir = 0.0
+	)
+
+
+func _refresh_rot_label() -> void:
+	if _rot_value_label == null or free_items == null:
+		return
+	var sid: String = free_items.get_selected_id()
+	if sid == "":
+		_rot_value_label.text = "0°"
+		return
+	_rot_value_label.text = "%d°" % int(round(free_items.get_rotation_deg(sid)))
+
+
+func _on_item_selection_changed(item_id: String) -> void:
+	if item_edit_bar == null:
+		return
+	var decorating: bool = gameplay != null and gameplay.get_mode() == "decorate"
+	item_edit_bar.visible = decorating and item_id != ""
+	_rotate_hold_dir = 0.0
+	if item_id == "":
+		return
+	var t := item_edit_bar.find_child("EditTitle", true, false) as Label
+	if t:
+		var pretty: String = item_id
+		var data: Dictionary = FurnitureCatalog.by_id(item_id)
+		if not data.is_empty():
+			pretty = str(data.get("name", item_id))
+		t.text = "Editar: %s" % pretty
+	_refresh_rot_label()
+	hint_label.text = "Arrastra para mover · ↺↻ girar · Quitar a la mochila"
+
+
+func _remove_selected_item() -> void:
+	if free_items == null:
+		return
+	var sid: String = free_items.get_selected_id()
+	if sid == "":
+		return
+	free_items.remove_item(sid)
+
+
+func _handle_decorate_item_input(event: InputEvent) -> bool:
+	if gameplay == null or gameplay.get_mode() != "decorate" or free_items == null:
+		return false
+	if catalog_ui and catalog_ui.has_method("is_dragging") and catalog_ui.is_dragging():
+		return false
+
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			return _try_begin_room_move(event.position)
+		else:
+			return _finish_room_move(event.position)
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			return _try_begin_room_move(event.position)
+		else:
+			return _finish_room_move(event.position)
+	if event is InputEventScreenDrag and _room_move_active:
+		_update_room_move(event.position)
+		return true
+	if event is InputEventMouseMotion and _room_move_active and (event.button_mask & MOUSE_BUTTON_MASK_LEFT):
+		_update_room_move(event.position)
+		return true
+	return false
+
+
+func _try_begin_room_move(screen_pos: Vector2) -> bool:
+	# No robar toques sobre el panel de edición ni el catálogo.
+	if item_edit_bar and item_edit_bar.visible and item_edit_bar.get_global_rect().has_point(screen_pos):
+		return false
+	if catalog_ui and catalog_ui.visible:
+		var drawer: Control = catalog_ui.get_node_or_null("Drawer") as Control
+		if drawer and drawer.get_global_rect().has_point(screen_pos):
+			return false
+	var local: Vector2 = _screen_to_room_local(screen_pos)
+	var hit: String = free_items.pick_at(local)
+	if hit == "":
+		free_items.clear_selection()
+		return false
+	_room_move_active = true
+	_room_move_id = hit
+	free_items.select_item(hit)
+	if camera_ctrl:
+		camera_ctrl.pan_enabled = false
+		camera_ctrl.clear_gestures()
+	free_items.begin_ghost(hit, free_items.get_variant(hit))
+	free_items.set_ghost_rotation(free_items.get_rotation_deg(hit))
+	free_items.update_ghost_at(local, hit)
+	free_items.set_item_visible(hit, false)
+	return true
+
+
+func _update_room_move(screen_pos: Vector2) -> void:
+	if not _room_move_active or _room_move_id == "":
+		return
+	var local := _screen_to_room_local(screen_pos)
+	free_items.update_ghost_at(local, _room_move_id)
+
+
+func _finish_room_move(screen_pos: Vector2) -> bool:
+	if not _room_move_active:
+		return false
+	var id: String = _room_move_id
+	_room_move_active = false
+	_room_move_id = ""
+	if camera_ctrl:
+		camera_ctrl.pan_enabled = true
+	if id == "":
+		return true
+	var local: Vector2 = _screen_to_room_local(screen_pos)
+	var rot: float = free_items.get_rotation_deg(id)
+	# Si el sprite estaba oculto, place lo vuelve a aplicar.
+	free_items.place_or_move(id, free_items.get_variant(id), local, rot)
+	return true
 
 
 func _on_catalog_close_requested() -> void:
 	_drag_active = false
+	_room_move_active = false
+	_rotate_hold_dir = 0.0
 	_clear_ghost()
 	if free_items:
 		free_items.hide_ghost()
+		free_items.clear_selection()
 	_set_catalog_visible(false)
 	if camera_ctrl:
 		camera_ctrl.pan_enabled = true
@@ -438,14 +702,15 @@ func _on_catalog_drag_dropped(item_id: String, variant_id: String, screen_pos: V
 			free_items.hide_ghost()
 			gameplay.show_toast("No te queda en el inventario")
 			return
-	var local := _screen_to_room_local(screen_pos)
-	free_items.place_or_move(item_id, variant_id, local)
+	var local: Vector2 = _screen_to_room_local(screen_pos)
+	var rot: Variant = free_items.get_rotation_deg(item_id) if already else null
+	free_items.place_or_move(item_id, variant_id, local, rot)
 	var pretty := item_id
 	var data := FurnitureCatalog.by_id(item_id)
 	if not data.is_empty():
 		pretty = str(data.get("name", item_id))
-	gameplay.show_toast("Colocado: %s" % pretty)
-	hint_label.text = "Inventario → arrastra al cuarto"
+	gameplay.show_toast("Colocado: %s · tócalo para girar" % pretty)
+	hint_label.text = "Toca un mueble: mover · girar · quitar"
 	if catalog_ui:
 		catalog_ui.refresh()
 

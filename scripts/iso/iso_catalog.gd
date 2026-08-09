@@ -238,7 +238,7 @@ func _make_item_card(item: Dictionary) -> Control:
 		var placed := _is_placed(item_id)
 		var can_drag := count > 0 or placed
 		if placed and count <= 0:
-			sub.text = "En el cuarto · mover"
+			sub.text = "En el cuarto · tocar para editar"
 		elif can_drag:
 			sub.text = "Mantén y arrastra"
 		else:
