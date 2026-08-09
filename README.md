@@ -2,28 +2,37 @@
 
 Juego 2D pixel art para **Android**, pensado para una niña de 11 años a la que le gustan los gatos.
 
-**Fantasía:** eres una cuidadora de gatos. Cuidas, decoras su hogar y completas misiones sencillas.  
+**Fantasía:** eres una cuidadora de gatos.  
 **Moneda:** Huellitas.  
-**Plataforma V1:** Android (controles táctiles, pantalla vertical).  
-**Arte inicial:** placeholders → pixel art después.  
+**Plataforma V1:** Android (vertical, táctil).  
+**Arte inicial:** placeholders.  
 **Avatar:** personaje inventado.
 
-## Cómo abrir el prototipo
+## Instalación (entorno de desarrollo)
 
-1. Instala [Godot 4.3+](https://godotengine.org/download).
-2. En Godot: **Import** → selecciona la carpeta del proyecto (donde está `project.godot`).
-3. Pulsa F5 / Play.
-4. En el editor, haz clic en el suelo para mover a la cuidadora (simula el toque del celular).
+Ya hay un instalador automático de Godot 4.3:
+
+```bash
+bash tools/install_godot.sh
+```
+
+Eso deja el comando `godot` listo e importa el proyecto.
+
+Para abrir el prototipo:
+
+```bash
+godot --path .
+```
+
+O en Godot: **Import** → carpeta del proyecto → Play (F5).  
+Haz clic/tocar el suelo para caminar.
 
 ## Estado actual
 
-**Hito 0 — Esqueleto móvil** (en progreso): mapa placeholder, tap-to-move, cámara y botones táctiles de prueba.
+**Hito 0 listo:** mapa casa+jardín, tap-to-move, HUD táctil, Huellitas.  
+Diseño: [`docs/GDD-v1.md`](docs/GDD-v1.md)
 
-Diseño completo: [`docs/GDD-v1.md`](docs/GDD-v1.md)
+## Nota sobre el celular
 
-## Versión 1 (alcance)
-
-- Casa + jardín pequeño
-- Hasta 3 gatos con necesidades simples
-- Cuidado, decorar una habitación, misiones, Huellitas
-- Export APK para su teléfono Android
+La instalación en el teléfono Android de ella se hace con un archivo APK (más adelante).  
+Desde aquí se prepara el juego; en el teléfono solo hay que permitir instalar e instalar el APK.
