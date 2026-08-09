@@ -1,31 +1,28 @@
 # Casa de Gatos
 
-Juego 2D pixel art para **Android**, pensado para una niña de 11 años a la que le gustan los gatos.
+Juego 2D para **Android** (cuidadora de gatos, pixel art en progreso).
 
-## Qué hay de nuevo (Hito 3)
+## Instalar en el celular (APK)
 
-- Botón **Misión**: muestra el objetivo actual y la recompensa
-- Pista de misión arriba del todo
-- Botón **Tienda**: gasta **Huellitas** en muebles
-- 8 misiones encadenadas (saludar, comer, cama, mimos, comprar, dormir, felicidad, decorar)
+Guía paso a paso: [`docs/INSTALAR-ANDROID.md`](docs/INSTALAR-ANDROID.md)
 
-## Cómo se juega ahora
+Archivo: **`CasaDeGatos.apk`** (prueba/debug).
 
-1. Mira la misión de arriba  
-2. Cuida a **Miel** o decora con la **Mochila**  
-3. Completa la misión → ganas Huellitas  
-4. Abre **Tienda** y compra más muebles  
+En este agente cloud queda en artifacts: `/opt/cursor/artifacts/CasaDeGatos.apk`
 
-## Probar en PC
+## Qué incluye ya (Hitos 0–3)
+
+- Caminar (tap)
+- Cuidar a **Miel**
+- Decoración con **Mochila**
+- **Misiones** + **Tienda** (Huellitas)
+
+## Regenerar APK (desarrollo)
 
 ```bash
 bash tools/install_godot.sh
-godot --path .
+bash tools/build_android_apk.sh
 ```
-
-## Seguir desde el celular
-
-PR: https://github.com/fabianmelo23/Juego-hija/pull/1
 
 ## Diseño
 
