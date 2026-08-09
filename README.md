@@ -1,29 +1,24 @@
 # Casa de Gatos
 
-Juego 2D para **Android** (cuidadora de gatos, pixel art en progreso).
+Juego Android de cuidadora de gatos.  
+**Dirección visual actual:** habitación **isométrica** personalizable.
 
-## Instalar en el celular (APK)
+## Plan isométrico
 
-Guía paso a paso: [`docs/INSTALAR-ANDROID.md`](docs/INSTALAR-ANDROID.md)
+Catálogo y orden de creación: [`docs/ISO-ROOM-DIRECTOR.md`](docs/ISO-ROOM-DIRECTOR.md)
 
-Archivo: **`CasaDeGatos.apk`** (prueba/debug).
+### Estado
+- ✅ **Ítem 01 — Piso base** (madera clara / cálida / azul suave)
+- 🔜 Ítem 02 — Pared izquierda
 
-En este agente cloud queda en artifacts: `/opt/cursor/artifacts/CasaDeGatos.apk`
+## APK de prueba
 
-## Qué incluye ya (Hitos 0–3)
-
-- Caminar (tap)
-- Cuidar a **Miel**
-- Decoración con **Mochila**
-- **Misiones** + **Tienda** (Huellitas)
-
-## Regenerar APK (desarrollo)
+Guía: [`docs/INSTALAR-ANDROID.md`](docs/INSTALAR-ANDROID.md)
 
 ```bash
-bash tools/install_godot.sh
 bash tools/build_android_apk.sh
 ```
 
-## Diseño
+## Diseño de juego
 
 [`docs/GDD-v1.md`](docs/GDD-v1.md)
