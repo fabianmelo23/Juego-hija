@@ -1,0 +1,17 @@
+# Godot 4
+.godot/
+*.translation
+*.apk
+*.aab
+*.so
+*.mobileprovision
+
+# Android build template (se regenera con Godot)
+/android/
+/build/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*~

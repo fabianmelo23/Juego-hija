@@ -1,0 +1,40 @@
+[gd_scene load_steps=3 format=3 uid="uid://bqisocatmiel01"]
+
+[ext_resource type="Script" path="res://scripts/cats/cat.gd" id="1_cat"]
+[ext_resource type="Texture2D" path="res://assets/art/iso/characters/miel_sit.png" id="2_tex"]
+
+[node name="IsoCat" type="Node2D"]
+script = ExtResource("1_cat")
+cat_name = "Miel"
+
+[node name="SelectionRing" type="Polygon2D" parent="."]
+z_index = -1
+visible = false
+color = Color(1, 0.92, 0.45, 0.55)
+polygon = PackedVector2Array(-22, 8, 22, 8, 26, 2, 0, -6, -26, 2)
+
+[node name="BodySprite" type="Sprite2D" parent="."]
+centered = false
+texture_filter = 0
+position = Vector2(-24, -48)
+texture = ExtResource("2_tex")
+
+[node name="NameLabel" type="Label" parent="."]
+offset_left = -40.0
+offset_top = -66.0
+offset_right = 40.0
+offset_bottom = -44.0
+theme_override_colors/font_color = Color(0.2, 0.14, 0.1, 1)
+theme_override_font_sizes/font_size = 18
+text = "Miel"
+horizontal_alignment = 1
+
+[node name="MoodLabel" type="Label" parent="."]
+offset_left = -48.0
+offset_top = 6.0
+offset_right = 48.0
+offset_bottom = 28.0
+theme_override_colors/font_color = Color(0.28, 0.2, 0.14, 1)
+theme_override_font_sizes/font_size = 14
+text = "contenta"
+horizontal_alignment = 1

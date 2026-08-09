@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://bqroomdeco001"]
+
+[ext_resource type="Script" path="res://scripts/systems/room_decorator.gd" id="1_deco"]
+
+[node name="RoomDecorator" type="Node2D"]
+script = ExtResource("1_deco")
+
+[node name="GridOverlay" type="Node2D" parent="."]
+z_index = -1
+
+[node name="FurnitureLayer" type="Node2D" parent="."]
+z_index = 0
+
+[node name="Ghost" type="Polygon2D" parent="."]
+z_index = 2
+color = Color(0.4, 0.9, 0.5, 0.45)
+polygon = PackedVector2Array(2, 2, 46, 2, 46, 46, 2, 46)

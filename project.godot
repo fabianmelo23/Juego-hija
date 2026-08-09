@@ -1,0 +1,40 @@
+; Engine configuration file for Casa de Gatos (Godot 4.3+)
+; Mobile-first portrait prototype — Hito 0
+
+config_version=5
+
+[application]
+
+config/name="Casa de Gatos"
+config/description="Juego 2D de cuidado de gatos para Android. Prototipo con placeholders."
+run/main_scene="res://scenes/iso/iso_room.tscn"
+config/features=PackedStringArray("4.3", "Mobile")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/size/window_width_override=360
+window/size/window_height_override=640
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep_width"
+window/handheld/orientation=1
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[layer_names]
+
+2d_physics/layer_1="world"
+2d_physics/layer_2="player"
+2d_physics/layer_3="cats"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+textures/vram_compression/import_etc2_astc=true
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.45, 0.62, 0.42, 1)

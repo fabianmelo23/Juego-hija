@@ -1,0 +1,4 @@
+{
+  "name": "casa-de-gatos",
+  "install": "bash tools/install_godot.sh"
+}

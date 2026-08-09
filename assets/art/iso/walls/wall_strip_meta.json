@@ -1,0 +1,12 @@
+{
+  "wall_h": 88,
+  "room": 8,
+  "left_origin": [
+    -264,
+    -96
+  ],
+  "right_origin": [
+    -8,
+    -96
+  ]
+}

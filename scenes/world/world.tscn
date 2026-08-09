@@ -1,0 +1,79 @@
+[gd_scene load_steps=6 format=3 uid="uid://bqworld001casa"]
+
+[ext_resource type="Script" path="res://scripts/world/world_controller.gd" id="1_world"]
+[ext_resource type="PackedScene" uid="uid://bqplayer001casa" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://bqtouchhud001" path="res://scenes/ui/touch_hud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://bqcatmiel001" path="res://scenes/cats/cat.tscn" id="4_cat"]
+[ext_resource type="PackedScene" uid="uid://bqroomdeco001" path="res://scenes/furniture/room_decorator.tscn" id="5_deco"]
+
+[node name="World" type="Node2D"]
+script = ExtResource("1_world")
+walk_rect = Rect2(-300, -480, 600, 960)
+
+[node name="GardenFloor" type="Polygon2D" parent="."]
+z_index = -2
+color = Color(0.55, 0.72, 0.45, 1)
+polygon = PackedVector2Array(-320, -40, 320, -40, 320, 500, -320, 500)
+
+[node name="HouseFloor" type="Polygon2D" parent="."]
+z_index = -2
+color = Color(0.82, 0.68, 0.52, 1)
+polygon = PackedVector2Array(-320, -500, 320, -500, 320, -40, -320, -40)
+
+[node name="HouseRug" type="Polygon2D" parent="."]
+z_index = -1
+color = Color(0.78, 0.42, 0.38, 0.85)
+polygon = PackedVector2Array(-120, -280, 120, -280, 120, -140, -120, -140)
+
+[node name="Path" type="Polygon2D" parent="."]
+z_index = -1
+color = Color(0.76, 0.66, 0.48, 1)
+polygon = PackedVector2Array(-40, -40, 40, -40, 40, 220, -40, 220)
+
+[node name="TreeCanopy" type="Polygon2D" parent="."]
+z_index = -1
+position = Vector2(200, 160)
+color = Color(0.28, 0.55, 0.32, 1)
+polygon = PackedVector2Array(-50, 0, 50, 0, 60, -70, 0, -110, -60, -70)
+
+[node name="TreeTrunk" type="Polygon2D" parent="."]
+z_index = -1
+position = Vector2(200, 160)
+color = Color(0.45, 0.3, 0.2, 1)
+polygon = PackedVector2Array(-10, 0, 10, 0, 10, 50, -10, 50)
+
+[node name="Bush" type="Polygon2D" parent="."]
+z_index = -1
+position = Vector2(-210, 280)
+color = Color(0.33, 0.58, 0.34, 1)
+polygon = PackedVector2Array(-40, 20, 40, 20, 45, -10, 0, -35, -45, -10)
+
+[node name="HouseLabel" type="Label" parent="."]
+offset_left = -90.0
+offset_top = -460.0
+offset_right = 90.0
+offset_bottom = -420.0
+theme_override_colors/font_color = Color(0.35, 0.22, 0.16, 1)
+theme_override_font_sizes/font_size = 22
+text = "Casa"
+horizontal_alignment = 1
+
+[node name="GardenLabel" type="Label" parent="."]
+offset_left = -90.0
+offset_top = 40.0
+offset_right = 90.0
+offset_bottom = 80.0
+theme_override_colors/font_color = Color(0.2, 0.32, 0.18, 1)
+theme_override_font_sizes/font_size = 22
+text = "Jardín"
+horizontal_alignment = 1
+
+[node name="RoomDecorator" parent="." instance=ExtResource("5_deco")]
+
+[node name="Cat" parent="." instance=ExtResource("4_cat")]
+position = Vector2(-80, -200)
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(0, 80)
+
+[node name="TouchHUD" parent="." instance=ExtResource("3_hud")]
