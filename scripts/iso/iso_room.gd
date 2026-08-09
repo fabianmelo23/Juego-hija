@@ -321,25 +321,11 @@ func _setup_camera_and_catalog() -> void:
 	add_child(camera_ctrl)
 	camera_ctrl.setup(room_root, room_root.position)
 
+	# Flotante bajo IsoHUD (NO bajo Safe/MarginContainer: ese lo estira a pantalla completa).
 	catalog_ui = preload("res://scripts/iso/iso_catalog.gd").new()
 	catalog_ui.name = "Catalog"
 	catalog_ui.visible = false
-	# Insertar a la izquierda del HUD
-	var safe: MarginContainer = $IsoHUD/Safe
-	var host := HBoxContainer.new()
-	host.name = "BodyRow"
-	host.set_anchors_preset(Control.PRESET_FULL_RECT)
-	host.add_theme_constant_override("separation", 8)
-	# Reparent VBox content into right side — simpler: add catalog as left child of Safe using overlay
-	catalog_ui.anchor_left = 0.0
-	catalog_ui.anchor_top = 0.0
-	catalog_ui.anchor_right = 0.0
-	catalog_ui.anchor_bottom = 1.0
-	catalog_ui.offset_left = 0.0
-	catalog_ui.offset_top = 0.0
-	catalog_ui.offset_right = 168.0
-	catalog_ui.offset_bottom = 0.0
-	safe.add_child(catalog_ui)
+	$IsoHUD.add_child(catalog_ui)
 
 	catalog_ui.bind_inventory(inventory)
 	catalog_ui.bind_free_items(free_items)
@@ -348,6 +334,7 @@ func _setup_camera_and_catalog() -> void:
 	catalog_ui.drag_dropped.connect(_on_catalog_drag_dropped)
 	catalog_ui.drag_cancelled.connect(_on_catalog_drag_cancelled)
 	catalog_ui.ambient_selected.connect(_on_catalog_ambient)
+	catalog_ui.close_requested.connect(_on_catalog_close_requested)
 	inventory.changed.connect(func() -> void:
 		if catalog_ui:
 			catalog_ui.refresh()
@@ -382,8 +369,19 @@ func _setup_camera_and_catalog() -> void:
 func _set_catalog_visible(v: bool) -> void:
 	if catalog_ui:
 		catalog_ui.visible = v
-	var safe: MarginContainer = $IsoHUD/Safe
-	safe.add_theme_constant_override("margin_left", 176 if v else 16)
+
+
+func _on_catalog_close_requested() -> void:
+	_drag_active = false
+	_clear_ghost()
+	if free_items:
+		free_items.hide_ghost()
+	_set_catalog_visible(false)
+	if camera_ctrl:
+		camera_ctrl.pan_enabled = true
+		camera_ctrl.clear_gestures()
+	gameplay.set_mode("care")
+	hint_label.text = "Toca a Miel · pellizca para zoom · arrastra para mover vista"
 
 
 func _screen_to_room_local(screen_pos: Vector2) -> Vector2:
@@ -401,6 +399,7 @@ func _on_catalog_drag_started(item_id: String, variant_id: String, _texture: Tex
 	set_meta("drag_variant_id", variant_id)
 	if camera_ctrl:
 		camera_ctrl.pan_enabled = false
+		camera_ctrl.clear_gestures()
 	free_items.begin_ghost(item_id, variant_id)
 
 
