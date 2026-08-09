@@ -65,10 +65,11 @@ Observar al gato → Cuidarlo → Decorar / mejorar → Cumplir misión → Reco
 | Cuidado | Comer, jugar, acariciar, dormir |
 | Decoración | Colocar / guardar muebles en una cuadrícula |
 | Inventario simple | Comida, juguetes, muebles |
-| Moneda | “Hilos” o “Estrellitas” (nombre final pendiente) |
+| Moneda | **Huellitas** (decidido) |
+| Controles | 100% táctiles (móvil primero) |
 | Misiones | 8–12 encargos cortos con tutorial implícito |
-| Guardado | Guardar y cargar progreso local |
-| Arte | Pixel art, cámara fija o con seguimiento suave |
+| Guardado | Guardar y cargar progreso local en el teléfono |
+| Arte | Pixel art, cámara con seguimiento suave |
 | Audio | Música suave + pocos sonidos (maullido, colocar mueble, premio) |
 
 ### No incluye en V1 (aunque suene tentador)
@@ -90,7 +91,7 @@ Esas ideas no se descartan: se guardan para V2+ cuando el núcleo ya enganche.
 
 ### Jugadora
 - Niña / joven cuidadora (avatar simple, pixel art).
-- Controles: caminar, interactuar (E / botón), abrir inventario, modo colocar muebles.
+- Controles táctiles: tap-to-move, tocar para interactuar, botones grandes para inventario y muebles.
 
 ### Gatos (V1)
 
@@ -121,15 +122,18 @@ Propuesta inicial:
 Regla de diseño: **nunca castigar con fail states duros.**  
 Un gato triste o hambriento pide ayuda; no “pierdes” el juego.
 
-### 7.2 Decoración (sandbox contenido)
+### 7.2 Decoración (sandbox contenido, pensada para dedo)
 
-- Una habitación con cuadrícula (ej. 12×10 tiles).
-- Modo construcción: elegir mueble → vista previa fantasma → colocar si hay espacio.
-- Rotación simple (2 direcciones) si el arte lo permite.
+- Una habitación con cuadrícula **grande y legible** (pocos tiles, no mapa denso).
+- Modo construcción: elegir mueble → vista previa fantasma → tocar casilla para colocar.
+- Botones grandes: **Colocar / Girar / Guardar / Cancelar**.
+- Evitar precisión de “pixel perfecto” con el dedo: la cuadrícula encaja sola (snap).
 - Muebles bloquean paso o no, según tipo (cama sí / alfombra no).
 - Lista V1 de muebles: cama, plato, árbol rascador, juguete, maceta, alfombra, mesa pequeña, lámpara.
 
 Meta emocional: que ella diga “esta es *mi* habitación de gatos”.
+
+Nota de diseño: en celular pequeño, decorar es más difícil que en tablet/PC. Por eso la V1 usa **una sola habitación**, casillas grandes y pocos muebles a la vez.
 
 ### 7.3 Misiones (dirección sin ahogar)
 
@@ -153,12 +157,12 @@ Ejemplos V1:
 
 ### 7.4 Economía simple
 
-- Moneda: provisional **Estrellitas**.
+- Moneda: **Huellitas** (icono de huella de gato).
 - Se ganan con misiones y cuidados diarios.
 - Se gastan en comida y muebles.
 - Precios bajos al inicio para que decorar se sienta inmediato.
 
-Evitar tiendas complejas, rarezas o sistemas de rare drop en V1.
+Evitar tiendas complejas, rarezas, anuncios o compras dentro de la app en V1.
 
 ### 7.5 Día / tiempo (ligero)
 
@@ -168,19 +172,45 @@ Evitar tiendas complejas, rarezas o sistemas de rare drop en V1.
 
 ---
 
-## 8. Interfaz (para 11 años)
+## 8. Controles táctiles (móvil primero)
+
+Decisión de producto: **ella juega en celular**, no en PC. Todo se diseña para el dedo desde el día 1.
+
+### Movimiento (recomendado)
+- **Tocar el suelo / camino → la jugadora camina hasta ahí** (tap-to-move).
+- Más simple para 11 años que un joystick virtual permanente.
+- Joystick virtual solo si en pruebas el tap-to-move se siente raro.
+
+### Interacción
+- **Tocar un gato / objeto** → se selecciona y aparecen 2–4 acciones grandes (Alimentar, Acariciar, Jugar, Dormir).
+- Botones de acción en la parte inferior de la pantalla (zona del pulgar).
+- Tamaño mínimo de toque generoso (aprox. 48–56 dp o más).
+
+### Cámara
+- Sigue a la jugadora con suavidad.
+- Zoom fijo pensado para pantalla de teléfono (nada que pellizcar en V1).
+- El mapa V1 debe caber “cómodo” en un celular: casa + jardín compactos.
+
+### Orientación
+- **Vertical (portrait)** por defecto: es como ella ya usa el teléfono.
+- Horizontal se evalúa después; no complicar V1 con las dos.
+
+---
+
+## 9. Interfaz (para 11 años + celular)
 
 Principios:
-- Pocos botones a la vez.
-- Iconos claros + texto corto.
-- Barras de necesidades visibles al seleccionar un gato.
-- Inventario grande y legible (no micro-iconos).
-- Confirmaciones suaves (“¿Colocar aquí?”).
+- Pocos botones a la vez (máximo 4 acciones visibles).
+- Iconos claros + texto corto y grande.
+- Barras de necesidades al seleccionar un gato.
+- Inventario a pantalla completa o media pantalla, celdas grandes.
+- Confirmaciones suaves (“¿Colocar aquí?”) con botones enormes.
 - Sin menús anidados profundos.
+- HUD que no tape la cara de los gatos.
 
 Pantallas V1:
 1. Título / Continuar / Nueva partida
-2. Juego (HUD mínimo)
+2. Juego (HUD mínimo + acciones inferiores)
 3. Inventario
 4. Modo colocar muebles
 5. Panel de misión
@@ -188,26 +218,36 @@ Pantallas V1:
 
 ---
 
-## 9. Arte y audio
+## 10. Arte y audio
 
 ### Pixel art
-- Tileset base: **16×16** (o 32×32 si se prefiere más detalle; elegir uno y no mezclar).
+- Tileset base: **16×16** escalado nítido (nearest neighbor) para verse claro en móvil.
 - Paleta limitada y cálida (madera, crema, verdes suaves, acentos coral/salmón — no púrpura genérico).
 - Animaciones prioritarias: caminar jugadora, idle/caminar/comer/dormir/jugar del gato.
-- La casa y el jardín deben leerse claros en móvil y PC.
+- Sprites y muebles deben leerse bien en pantallas pequeñas: siluetas claras, poco detalle fino.
 
 ### Audio
 - 1 tema loop tranquilo para casa/jardín.
-- SFX: paso suave, maullido, colocar, premio misión, click UI.
-- Volumen cómodo; nada agresivo.
+- SFX: paso suave, maullido, colocar, premio misión, toque UI.
+- Respeta el silencio del teléfono: música suave y fácil de bajar/apagar.
 
 ---
 
-## 10. Tecnología
+## 11. Tecnología
 
 **Motor:** Godot 4  
-**Lenguaje:** GDScript (más simple para empezar)  
-**Plataforma objetivo V1:** PC (teclado/ratón). Controles táctiles después si se porta a tablet.
+**Lenguaje:** GDScript  
+**Plataforma objetivo V1:** **Celular (Android primero)**  
+**Controles:** táctiles únicamente en la experiencia objetivo  
+**Distribución familiar V1:** instalar el juego en su teléfono (APK / instalación directa), no hace falta tienda pública al inicio.
+
+### Por qué Android primero
+- En familia suele ser más simple probar e instalar builds.
+- Si su teléfono es iPhone, hay que planear cuenta de desarrollador / TestFlight; es más fricción. Confirmar marca del teléfono.
+
+### Desarrollo diario
+- Se prototipa en el editor de Godot (emulando toques).
+- Cada hito importante se exporta a su celular para probar *de verdad* con el dedo.
 
 ### Estructura de proyecto propuesta
 
@@ -236,36 +276,37 @@ casa-de-gatos/
 
 ---
 
-## 11. Hitos de desarrollo
+## 12. Hitos de desarrollo
 
-### Hito 0 — Esqueleto
-- Proyecto Godot creado
-- Jugadora camina en un mapa placeholder
-- Cámara y colisiones básicas
+### Hito 0 — Esqueleto móvil
+- Proyecto Godot creado (viewport vertical)
+- Tap-to-move en mapa placeholder
+- Cámara suave + colisiones básicas
+- Botones UI táctiles de prueba
 
 ### Hito 1 — Primer gato vivo
 - Gato con 3 necesidades
-- Alimentar / acariciar / dormir
-- Feedback visual claro
+- Alimentar / acariciar / dormir con botones grandes
+- Feedback visual claro en pantalla chica
 
 ### Hito 2 — Decoración
-- Inventario + colocar 4–5 muebles
+- Inventario + colocar 4–5 muebles con snap a cuadrícula
 - Guardar layout de la habitación
 
 ### Hito 3 — Misiones + economía
 - 8 misiones encadenadas suaves
-- Estrellitas y tienda mínima
+- Huellitas y tienda mínima
 
 ### Hito 4 — Pulido jugable para ella
 - 2.º y 3.er gato
 - Arte más limpio, sonido, guardado robusto
-- Sesión de prueba con tu hija (la prueba que más importa)
+- Export a su celular + sesión de prueba con tu hija
 
 ---
 
-## 12. Criterio de éxito de la V1
+## 13. Criterio de éxito de la V1
 
-La Versión 1 está “lista” cuando tu hija puede, sin que le expliques mucho:
+La Versión 1 está “lista” cuando tu hija puede, **sola en su celular**, sin que le expliques mucho:
 
 1. Cuidar al menos un gato un rato.
 2. Decorar la habitación a su gusto.
@@ -276,11 +317,22 @@ Si eso ocurre, el juego ya ganó. El resto es expansión.
 
 ---
 
-## 13. Decisiones pendientes (próxima conversación)
+## 14. Decisiones cerradas
 
-1. Nombre final de la moneda (Estrellitas / Hilos / Huellitas…).
+| Tema | Decisión |
+|---|---|
+| Fantasía | Cuidadora de gatos |
+| Moneda | **Huellitas** |
+| Plataforma V1 | **Celular primero** (Android preferido) |
+| Orientación | Vertical |
+| Movimiento | Tap-to-move |
+
+## 15. Decisiones pendientes
+
+1. ¿Su teléfono es **Android o iPhone**? (cambia cómo se instala para probar)
 2. ¿La jugadora se parece a tu hija o es un personaje inventado?
-3. ¿PC primero, o priorizar tablet?
-4. ¿Quieres que el primer prototipo use arte placeholder (cuadrados de color) para jugar pronto, o esperamos arte pixel desde el día 1?
+3. Primer prototipo: ¿placeholders para jugar pronto, o arte pixel desde el día 1?
 
-Recomendación profesional: **placeholders primero**. El feeling del cuidado y la decoración importa más que el arte final en las primeras semanas.
+Defaults si no hay preferencia fuerte:
+- Personaje inventado (más libre y menos presión).
+- Placeholders primero (llegar antes a sus manos).
