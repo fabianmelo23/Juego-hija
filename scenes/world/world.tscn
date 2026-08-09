@@ -1,0 +1,104 @@
+[gd_scene load_steps=4 format=3 uid="uid://bqworld001casa"]
+
+[ext_resource type="Script" path="res://scripts/world/world_controller.gd" id="1_world"]
+[ext_resource type="PackedScene" uid="uid://bqplayer001casa" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://bqtouchhud001" path="res://scenes/ui/touch_hud.tscn" id="3_hud"]
+
+[node name="World" type="Node2D"]
+script = ExtResource("1_world")
+walk_rect = Rect2(-300, -480, 600, 960)
+
+[node name="GardenFloor" type="Polygon2D" parent="."]
+z_index = -2
+color = Color(0.55, 0.72, 0.45, 1)
+polygon = PackedVector2Array(-320, -40, 320, -40, 320, 500, -320, 500)
+
+[node name="HouseFloor" type="Polygon2D" parent="."]
+z_index = -2
+color = Color(0.82, 0.68, 0.52, 1)
+polygon = PackedVector2Array(-320, -500, 320, -500, 320, -40, -320, -40)
+
+[node name="HouseRug" type="Polygon2D" parent="."]
+z_index = -1
+color = Color(0.78, 0.42, 0.38, 0.85)
+polygon = PackedVector2Array(-120, -280, 120, -280, 120, -140, -120, -140)
+
+[node name="Path" type="Polygon2D" parent="."]
+z_index = -1
+color = Color(0.76, 0.66, 0.48, 1)
+polygon = PackedVector2Array(-40, -40, 40, -40, 40, 220, -40, 220)
+
+[node name="TreeCanopy" type="Polygon2D" parent="."]
+z_index = -1
+position = Vector2(200, 160)
+color = Color(0.28, 0.55, 0.32, 1)
+polygon = PackedVector2Array(-50, 0, 50, 0, 60, -70, 0, -110, -60, -70)
+
+[node name="TreeTrunk" type="Polygon2D" parent="."]
+z_index = -1
+position = Vector2(200, 160)
+color = Color(0.45, 0.3, 0.2, 1)
+polygon = PackedVector2Array(-10, 0, 10, 0, 10, 50, -10, 50)
+
+[node name="Bush" type="Polygon2D" parent="."]
+z_index = -1
+position = Vector2(-210, 280)
+color = Color(0.33, 0.58, 0.34, 1)
+polygon = PackedVector2Array(-40, 20, 40, 20, 45, -10, 0, -35, -45, -10)
+
+[node name="HouseLabel" type="Label" parent="."]
+offset_left = -90.0
+offset_top = -460.0
+offset_right = 90.0
+offset_bottom = -420.0
+theme_override_colors/font_color = Color(0.35, 0.22, 0.16, 1)
+theme_override_font_sizes/font_size = 22
+text = "Casa"
+horizontal_alignment = 1
+
+[node name="GardenLabel" type="Label" parent="."]
+offset_left = -90.0
+offset_top = 40.0
+offset_right = 90.0
+offset_bottom = 80.0
+theme_override_colors/font_color = Color(0.2, 0.32, 0.18, 1)
+theme_override_font_sizes/font_size = 22
+text = "Jardín"
+horizontal_alignment = 1
+
+[node name="CatPlaceholder" type="Node2D" parent="."]
+position = Vector2(-80, -200)
+
+[node name="Body" type="Polygon2D" parent="CatPlaceholder"]
+color = Color(0.92, 0.74, 0.42, 1)
+polygon = PackedVector2Array(-22, 0, 22, 0, 24, -18, 10, -28, -10, -28, -24, -18)
+
+[node name="Head" type="Polygon2D" parent="CatPlaceholder"]
+position = Vector2(18, -22)
+color = Color(0.92, 0.74, 0.42, 1)
+polygon = PackedVector2Array(-12, 8, 12, 8, 14, -6, 4, -16, -4, -16, -14, -6)
+
+[node name="EarL" type="Polygon2D" parent="CatPlaceholder"]
+position = Vector2(10, -40)
+color = Color(0.85, 0.62, 0.32, 1)
+polygon = PackedVector2Array(-4, 8, 2, 8, -1, -6)
+
+[node name="EarR" type="Polygon2D" parent="CatPlaceholder"]
+position = Vector2(26, -40)
+color = Color(0.85, 0.62, 0.32, 1)
+polygon = PackedVector2Array(-2, 8, 4, 8, 1, -6)
+
+[node name="Hint" type="Label" parent="CatPlaceholder"]
+offset_left = -70.0
+offset_top = 8.0
+offset_right = 90.0
+offset_bottom = 40.0
+theme_override_colors/font_color = Color(0.25, 0.18, 0.12, 1)
+theme_override_font_sizes/font_size = 16
+text = "Próximo: tu gato"
+horizontal_alignment = 1
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(0, 80)
+
+[node name="TouchHUD" parent="." instance=ExtResource("3_hud")]

@@ -1,0 +1,30 @@
+[gd_scene load_steps=3 format=3 uid="uid://bqplayer001casa"]
+
+[ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(28, 44)
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 1
+motion_mode = 1
+script = ExtResource("1_player")
+
+[node name="Body" type="Polygon2D" parent="."]
+color = Color(0.91, 0.56, 0.45, 1)
+polygon = PackedVector2Array(-14, 0, 14, 0, 14, -44, -14, -44)
+
+[node name="Face" type="Polygon2D" parent="."]
+color = Color(0.98, 0.86, 0.78, 1)
+polygon = PackedVector2Array(-10, -44, 10, -44, 10, -30, -10, -30)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -22)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(0, -80)
+zoom = Vector2(1.15, 1.15)
+position_smoothing_enabled = true
+position_smoothing_speed = 6.0

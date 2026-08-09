@@ -1,0 +1,110 @@
+[gd_scene load_steps=2 format=3 uid="uid://bqtouchhud001"]
+
+[ext_resource type="Script" path="res://scripts/ui/touch_hud.gd" id="1_hud"]
+
+[node name="TouchHUD" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 20
+
+[node name="Root" type="Control" parent="SafeArea"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TopBar" type="HBoxContainer" parent="SafeArea/Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 48.0
+grow_horizontal = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="SafeArea/Root/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.18, 0.14, 0.12, 1)
+theme_override_font_sizes/font_size = 28
+text = "Casa de Gatos"
+
+[node name="HuellitasLabel" type="Label" parent="SafeArea/Root/TopBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.16, 1)
+theme_override_font_sizes/font_size = 24
+text = "Huellitas: 0"
+horizontal_alignment = 2
+
+[node name="Toast" type="Label" parent="SafeArea/Root"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -40.0
+offset_right = 280.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 26
+text = "Toast"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BottomBar" type="HBoxContainer" parent="SafeArea/Root"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -72.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Inventory" type="Button" parent="SafeArea/Root/BottomBar"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "Mochila"
+
+[node name="Mission" type="Button" parent="SafeArea/Root/BottomBar"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "Misión"
+
+[node name="Care" type="Button" parent="SafeArea/Root/BottomBar"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "Cuidar"
+
+[node name="Pause" type="Button" parent="SafeArea/Root/BottomBar"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "Menú"

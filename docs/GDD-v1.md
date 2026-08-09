@@ -323,16 +323,12 @@ Si eso ocurre, el juego ya ganó. El resto es expansión.
 |---|---|
 | Fantasía | Cuidadora de gatos |
 | Moneda | **Huellitas** |
-| Plataforma V1 | **Celular primero** (Android preferido) |
-| Orientación | Vertical |
+| Plataforma V1 | **Android** (celular, vertical) |
+| Avatar | Personaje inventado |
+| Arte inicial | Placeholders (formas de color) → pixel art después |
 | Movimiento | Tap-to-move |
 
-## 15. Decisiones pendientes
+## 15. Estado de implementación
 
-1. ¿Su teléfono es **Android o iPhone**? (cambia cómo se instala para probar)
-2. ¿La jugadora se parece a tu hija o es un personaje inventado?
-3. Primer prototipo: ¿placeholders para jugar pronto, o arte pixel desde el día 1?
-
-Defaults si no hay preferencia fuerte:
-- Personaje inventado (más libre y menos presión).
-- Placeholders primero (llegar antes a sus manos).
+- **Hito 0 listo (esqueleto):** proyecto Godot 4, mapa casa+jardín placeholder, tap-to-move, cámara suave, HUD táctil (Mochila / Misión / Cuidar / Menú), contador de Huellitas.
+- Siguiente: **Hito 1** — primer gato con 3 necesidades e interacciones táctiles.
