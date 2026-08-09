@@ -1,5 +1,5 @@
 extends Node2D
-## Cuarto isométrico: shell, atmósfera y muebles felinos.
+## Cuarto isométrico: decorar + cuidar a Miel.
 
 signal floor_changed(variant_id: String)
 signal wall_left_changed(variant_id: String)
@@ -33,7 +33,8 @@ const TOY_ORIGIN := Vector2i(4, 5) # huella 1×1
 @onready var window_layer: Node2D = $RoomRoot/WindowLayer
 @onready var light_layer: Node2D = $RoomRoot/LightLayer
 @onready var background: Polygon2D = $Background
-@onready var title_label: Label = $IsoHUD/Safe/VBox/Title
+@onready var title_label: Label = $IsoHUD/Safe/VBox/TopRow/Title
+@onready var gameplay: Node = $Gameplay
 @onready var hint_label: Label = $IsoHUD/Safe/VBox/Hint
 @onready var tab_bar: HBoxContainer = $IsoHUD/Safe/VBox/TabBar
 @onready var item_tab_bar: HBoxContainer = $IsoHUD/Safe/VBox/ItemTabBar
@@ -71,11 +72,13 @@ var _current_window: String = "window_small_day"
 var _current_light: String = "light_ceiling_warm"
 var _current_wallpaper: String = "wallpaper_none"
 var _current_rug: String = "rug_small_blush"
-var _current_bed: String = "bed_cat_blush"
+var _current_bed: String = "bed_cat_none"
 var _current_bowl: String = "bowl_food_full"
 var _current_scratcher: String = "scratcher_wood"
 var _current_toy: String = "toy_ball_red"
-var _edit_target: String = "toy"
+var _edit_target: String = "floor"
+var _placed_notified: Dictionary = {}
+var _gameplay_ready: bool = false
 
 var _floor_variants := [
 	{"id": "floor_wood_light", "name": "Madera clara"},
@@ -165,7 +168,7 @@ func _ready() -> void:
 	_build_toy()
 	_build_tabs()
 	_rebuild_variant_buttons()
-	title_label.text = "Casa de Gatos — Cuarto iso"
+	title_label.text = "Casa de Gatos"
 	set_floor_variant(_current_floor)
 	set_wall_left_variant(_current_wall_left)
 	set_wall_right_variant(_current_wall_right)
@@ -177,7 +180,116 @@ func _ready() -> void:
 	set_bowl_variant(_current_bowl)
 	set_scratcher_variant(_current_scratcher)
 	set_toy_variant(_current_toy)
-	_set_edit_target("toy")
+	_set_edit_target("floor")
+	_setup_gameplay()
+
+
+
+func _setup_gameplay() -> void:
+	gameplay.mode_bar = $IsoHUD/Safe/VBox/ModeBar
+	gameplay.decorate_tabs = [
+		$IsoHUD/Safe/VBox/TabBar,
+		$IsoHUD/Safe/VBox/ItemTabBar,
+		$IsoHUD/Safe/VBox/VariantBar,
+	]
+	gameplay.care_panel = $IsoHUD/Safe/VBox/CarePanel
+	gameplay.care_bar = $IsoHUD/Safe/VBox/CareBar
+	gameplay.mission_panel = $IsoHUD/Safe/MissionPanel
+	gameplay.shop_panel = $IsoHUD/Safe/ShopPanel
+	gameplay.toast_label = $IsoHUD/Safe/VBox/Toast
+	gameplay.huellitas_label = $IsoHUD/Safe/VBox/TopRow/HuellitasLabel
+	gameplay.mission_hint = $IsoHUD/Safe/VBox/MissionHint
+	gameplay.hunger_bar = $IsoHUD/Safe/VBox/CarePanel/VBox/HungerRow/HungerBar
+	gameplay.energy_bar = $IsoHUD/Safe/VBox/CarePanel/VBox/EnergyRow/EnergyBar
+	gameplay.happiness_bar = $IsoHUD/Safe/VBox/CarePanel/VBox/HappyRow/HappyBar
+	gameplay.cat_title = $IsoHUD/Safe/VBox/CarePanel/VBox/CatTitle
+	gameplay.mission_title = $IsoHUD/Safe/MissionPanel/VBox/MissionTitle
+	gameplay.mission_progress = $IsoHUD/Safe/MissionPanel/VBox/MissionProgress
+	gameplay.mission_detail = $IsoHUD/Safe/MissionPanel/VBox/MissionDetail
+	gameplay.mission_reward = $IsoHUD/Safe/MissionPanel/VBox/MissionReward
+	$IsoHUD/Safe/MissionPanel/VBox/CloseMission.pressed.connect(gameplay.close_mission)
+	$IsoHUD/Safe/ShopPanel/VBox/CloseShop.pressed.connect(gameplay.close_shop)
+	_build_mode_bar()
+	_build_care_bar()
+	gameplay.setup(self)
+	_gameplay_ready = true
+	title_label.text = "Casa de Gatos"
+
+
+func _build_mode_bar() -> void:
+	var bar: HBoxContainer = $IsoHUD/Safe/VBox/ModeBar
+	for child in bar.get_children():
+		child.queue_free()
+	for label_target in [["Cuidar", "care"], ["Decorar", "decorate"], ["Misión", "mission"], ["Tienda", "shop"]]:
+		var button := Button.new()
+		button.focus_mode = Control.FOCUS_NONE
+		button.custom_minimum_size = Vector2(0, 48)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.add_theme_font_size_override("font_size", 15)
+		button.text = label_target[0]
+		var target := str(label_target[1])
+		button.pressed.connect(func() -> void:
+			match target:
+				"care":
+					gameplay.set_mode("care")
+					hint_label.text = "Toca a Miel para cuidarla"
+				"decorate":
+					gameplay.set_mode("decorate")
+					hint_label.text = "Elige qué quieres cambiar"
+					_set_edit_target(_edit_target)
+				"mission":
+					gameplay.open_mission()
+				"shop":
+					gameplay.open_shop()
+		)
+		bar.add_child(button)
+
+
+func _build_care_bar() -> void:
+	var bar: HBoxContainer = $IsoHUD/Safe/VBox/CareBar
+	for child in bar.get_children():
+		child.queue_free()
+	for label_action in [["Comer", "feed"], ["Mimos", "pet"], ["Jugar", "play"], ["Dormir", "sleep"]]:
+		var button := Button.new()
+		button.focus_mode = Control.FOCUS_NONE
+		button.custom_minimum_size = Vector2(0, 56)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.add_theme_font_size_override("font_size", 16)
+		button.text = label_action[0]
+		var action := str(label_action[1])
+		button.pressed.connect(func() -> void:
+			gameplay.do_care(action)
+		)
+		bar.add_child(button)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	var tap_pos: Variant = null
+	if event is InputEventScreenTouch and event.pressed:
+		tap_pos = event.position
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		tap_pos = event.position
+	if tap_pos != null:
+		if gameplay.handle_tap(tap_pos):
+			get_viewport().set_input_as_handled()
+
+
+func on_cat_fed() -> void:
+	# El plato se vacía un poco al comer.
+	match _current_bowl:
+		"bowl_food_full":
+			set_bowl_variant("bowl_food_half")
+		"bowl_food_half":
+			set_bowl_variant("bowl_food_empty")
+
+
+func _notify_place_once(item_id: String, is_present: bool) -> void:
+	if not _gameplay_ready or not is_present:
+		return
+	if bool(_placed_notified.get(item_id, false)):
+		return
+	_placed_notified[item_id] = true
+	gameplay.notify_furniture_placed(item_id)
 
 
 func _load_textures() -> void:
@@ -644,6 +756,7 @@ func set_rug_variant(variant_id: String) -> void:
 	if _edit_target == "rug":
 		hint_label.text = "Editando: Alfombra · %s" % _nice_name(_rug_variants, variant_id)
 	rug_changed.emit(variant_id)
+	_notify_place_once("rug", variant_id != "rug_small_none")
 
 
 
@@ -657,6 +770,7 @@ func set_bed_variant(variant_id: String) -> void:
 	if _edit_target == "bed":
 		hint_label.text = "Editando: Cama · %s" % _nice_name(_bed_variants, variant_id)
 	bed_changed.emit(variant_id)
+	_notify_place_once("bed", variant_id != "bed_cat_none")
 
 
 
@@ -670,6 +784,7 @@ func set_bowl_variant(variant_id: String) -> void:
 	if _edit_target == "bowl":
 		hint_label.text = "Editando: Plato · %s" % _nice_name(_bowl_variants, variant_id)
 	bowl_changed.emit(variant_id)
+	_notify_place_once("bowl", variant_id != "bowl_food_none")
 
 
 func set_scratcher_variant(variant_id: String) -> void:
@@ -682,6 +797,7 @@ func set_scratcher_variant(variant_id: String) -> void:
 	if _edit_target == "scratcher":
 		hint_label.text = "Editando: Rascador · %s" % _nice_name(_scratcher_variants, variant_id)
 	scratcher_changed.emit(variant_id)
+	_notify_place_once("scratcher", variant_id != "scratcher_none")
 
 
 
@@ -695,6 +811,7 @@ func set_toy_variant(variant_id: String) -> void:
 	if _edit_target == "toy":
 		hint_label.text = "Editando: Pelota · %s" % _nice_name(_toy_variants, variant_id)
 	toy_changed.emit(variant_id)
+	_notify_place_once("toy", variant_id != "toy_ball_none")
 
 
 func get_current_floor_variant() -> String:

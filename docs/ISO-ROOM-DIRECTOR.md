@@ -151,8 +151,8 @@ Trabajamos **uno por uno**. No se salta de categoría sin cerrar el shell.
 10. **20 `bowl_food`** ✅ hecho (Ninguno / Lleno / Medio / Vacío)  
 11. **22 `scratcher`** ✅ hecho (Ninguno / Madera / Rubor / Menta)  
 12. **24 `toy_ball`** ✅ hecho (Ninguna / Roja / Cielo / Sol)  
-13. Migrar Miel + cuidados al cuarto iso ← siguiente  
-14. Migrar mochila/colocación al grid iso
+13. **Migrar Miel + cuidados** ✅ hecho (Cuidar / misiones / tienda golosina)  
+14. Migrar mochila/colocación al grid iso ← siguiente
 
 ### Fase P3 — Personalidad del espacio
 15–36 según demanda de tu hija / misiones / tienda
@@ -210,4 +210,4 @@ Hasta que el shell (piso + 2 paredes) no esté sólido, no avanzamos a 20 mueble
 
 ## 10. Siguiente acción inmediata
 
-**Migrar Miel + cuidados** al cuarto isométrico (hambre / energía / felicidad sobre el nuevo espacio).
+**Migrar mochila/colocación** al grid isométrico (mover muebles tocando casillas, no solo variantes fijas).

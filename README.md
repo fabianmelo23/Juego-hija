@@ -19,7 +19,8 @@ Catálogo y orden de creación: [`docs/ISO-ROOM-DIRECTOR.md`](docs/ISO-ROOM-DIRE
 - ✅ **Ítem 20 — Plato de comida** (Ninguno / Lleno / Medio / Vacío)
 - ✅ **Ítem 22 — Rascador** (Ninguno / Madera / Rubor / Menta)
 - ✅ **Ítem 24 — Pelota** (Ninguna / Roja / Cielo / Sol)
-- 🔜 Migrar Miel + cuidados al cuarto iso
+- ✅ **Miel + cuidados** en el cuarto iso (Cuidar / Misión / Tienda)
+- 🔜 Colocación libre en el grid iso
 
 ## APK de prueba
 

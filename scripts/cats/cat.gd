@@ -15,20 +15,26 @@ signal reacted(message: String)
 @export var energy_decay_per_sec: float = 0.35
 @export var happiness_decay_per_sec: float = 0.45
 
-@onready var name_label: Label = $NameLabel
-@onready var selection_ring: Polygon2D = $SelectionRing
-@onready var mood_label: Label = $MoodLabel
+@onready var name_label: Label = get_node_or_null("NameLabel")
+@onready var selection_ring: Node2D = get_node_or_null("SelectionRing")
+@onready var mood_label: Label = get_node_or_null("MoodLabel")
+@onready var body_sprite: Sprite2D = get_node_or_null("BodySprite")
 
 var _selected: bool = false
 var _body_parts: Array[Polygon2D] = []
 var _base_colors: Dictionary = {}
 var _react_tween: Tween
+var _base_modulate: Color = Color.WHITE
 
 
 func _ready() -> void:
 	add_to_group("cats")
-	name_label.text = cat_name
-	selection_ring.visible = false
+	if name_label:
+		name_label.text = cat_name
+	if selection_ring:
+		selection_ring.visible = false
+	if body_sprite:
+		_base_modulate = body_sprite.modulate
 	for child in get_children():
 		if child is Polygon2D and child != selection_ring:
 			_body_parts.append(child)
@@ -49,7 +55,8 @@ func _process(delta: float) -> void:
 
 func set_selected(value: bool) -> void:
 	_selected = value
-	selection_ring.visible = value
+	if selection_ring:
+		selection_ring.visible = value
 	selected_changed.emit(value)
 
 
@@ -122,6 +129,8 @@ func _emit_needs() -> void:
 
 
 func _update_mood_label() -> void:
+	if mood_label == null:
+		return
 	var lowest := minf(hunger, minf(energy, happiness))
 	if lowest < 25.0:
 		if hunger <= energy and hunger <= happiness:
@@ -144,13 +153,19 @@ func _play_react(flash_color: Color) -> void:
 	scale = Vector2.ONE
 	for part in _body_parts:
 		part.color = _base_colors[part]
+	if body_sprite:
+		body_sprite.modulate = _base_modulate
 	_react_tween = create_tween()
 	_react_tween.set_parallel(true)
 	_react_tween.tween_property(self, "scale", Vector2(1.12, 1.12), 0.12)
 	for part in _body_parts:
 		_react_tween.tween_property(part, "color", flash_color, 0.12)
+	if body_sprite:
+		_react_tween.tween_property(body_sprite, "modulate", flash_color, 0.12)
 	_react_tween.set_parallel(false)
 	_react_tween.tween_property(self, "scale", Vector2.ONE, 0.18)
 	_react_tween.set_parallel(true)
 	for part in _body_parts:
 		_react_tween.tween_property(part, "color", _base_colors[part], 0.18)
+	if body_sprite:
+		_react_tween.tween_property(body_sprite, "modulate", _base_modulate, 0.18)

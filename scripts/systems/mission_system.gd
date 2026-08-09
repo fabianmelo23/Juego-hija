@@ -37,7 +37,7 @@ var _missions: Array[Dictionary] = [
 	{
 		"id": "place_bed",
 		"title": "Pon una cama",
-		"detail": "Abre la Mochila y coloca la Cama en la casa.",
+		"detail": "En Decorar → Cama, elige un color para colocarla.",
 		"event": "place_bed",
 		"reward": 5,
 	},
@@ -51,7 +51,7 @@ var _missions: Array[Dictionary] = [
 	{
 		"id": "buy",
 		"title": "Compra en la tienda",
-		"detail": "Abre Menú (Tienda) y compra algo con Huellitas.",
+		"detail": "Abre Tienda y compra una golosina con Huellitas.",
 		"event": "buy",
 		"reward": 5,
 	},
@@ -72,7 +72,7 @@ var _missions: Array[Dictionary] = [
 	{
 		"id": "decorate",
 		"title": "Decora un poco más",
-		"detail": "Coloca al menos 3 muebles en total.",
+		"detail": "En Decorar, coloca al menos 3 cosas (cama, plato, rascador...).",
 		"event": "decorate3",
 		"reward": 8,
 	},

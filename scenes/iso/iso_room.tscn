@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://bqisoroom001"]
+[gd_scene load_steps=3 format=3 uid="uid://bqisoroom001"]
 
 [ext_resource type="Script" path="res://scripts/iso/iso_room.gd" id="1_room"]
+[ext_resource type="Script" path="res://scripts/iso/iso_gameplay.gd" id="2_gameplay"]
 
 [node name="IsoRoom" type="Node2D"]
 script = ExtResource("1_room")
@@ -28,7 +29,12 @@ polygon = PackedVector2Array(-200, -200, 920, -200, 920, 1500, -200, 1500)
 
 [node name="FurnitureLayer" type="Node2D" parent="RoomRoot"]
 
+[node name="CatLayer" type="Node2D" parent="RoomRoot"]
+
 [node name="LightLayer" type="Node2D" parent="RoomRoot"]
+
+[node name="Gameplay" type="Node" parent="."]
+script = ExtResource("2_gameplay")
 
 [node name="IsoHUD" type="CanvasLayer" parent="."]
 
@@ -40,42 +46,224 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 24
+theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_bottom = 16
 
 [node name="VBox" type="VBoxContainer" parent="IsoHUD/Safe"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="IsoHUD/Safe/VBox"]
+[node name="TopRow" type="HBoxContainer" parent="IsoHUD/Safe/VBox"]
 layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="IsoHUD/Safe/VBox/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.16, 0.14, 0.12, 1)
-theme_override_font_sizes/font_size = 26
-text = "Casa de Gatos — Cuarto iso"
+theme_override_font_sizes/font_size = 24
+text = "Casa de Gatos"
 horizontal_alignment = 1
+
+[node name="HuellitasLabel" type="Label" parent="IsoHUD/Safe/VBox/TopRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.16, 1)
+theme_override_font_sizes/font_size = 20
+text = "Huellitas: 0"
+horizontal_alignment = 2
+
+[node name="MissionHint" type="Label" parent="IsoHUD/Safe/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.28, 0.22, 0.18, 1)
+theme_override_font_sizes/font_size = 16
+text = "Misión: ..."
+horizontal_alignment = 1
+autowrap_mode = 2
 
 [node name="Hint" type="Label" parent="IsoHUD/Safe/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.28, 0.22, 0.18, 1)
-theme_override_font_sizes/font_size = 18
-text = "Ítem 24: Pelota"
+theme_override_font_sizes/font_size = 16
+text = "Toca a Miel para cuidarla"
 horizontal_alignment = 1
+
+[node name="CarePanel" type="PanelContainer" parent="IsoHUD/Safe/VBox"]
+visible = false
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="IsoHUD/Safe/VBox/CarePanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CatTitle" type="Label" parent="IsoHUD/Safe/VBox/CarePanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Miel"
+horizontal_alignment = 1
+
+[node name="HungerRow" type="HBoxContainer" parent="IsoHUD/Safe/VBox/CarePanel/VBox"]
+layout_mode = 2
+
+[node name="L" type="Label" parent="IsoHUD/Safe/VBox/CarePanel/VBox/HungerRow"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Hambre"
+
+[node name="HungerBar" type="ProgressBar" parent="IsoHUD/Safe/VBox/CarePanel/VBox/HungerRow"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+show_percentage = false
+
+[node name="EnergyRow" type="HBoxContainer" parent="IsoHUD/Safe/VBox/CarePanel/VBox"]
+layout_mode = 2
+
+[node name="L" type="Label" parent="IsoHUD/Safe/VBox/CarePanel/VBox/EnergyRow"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Energía"
+
+[node name="EnergyBar" type="ProgressBar" parent="IsoHUD/Safe/VBox/CarePanel/VBox/EnergyRow"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+show_percentage = false
+
+[node name="HappyRow" type="HBoxContainer" parent="IsoHUD/Safe/VBox/CarePanel/VBox"]
+layout_mode = 2
+
+[node name="L" type="Label" parent="IsoHUD/Safe/VBox/CarePanel/VBox/HappyRow"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Felicidad"
+
+[node name="HappyBar" type="ProgressBar" parent="IsoHUD/Safe/VBox/CarePanel/VBox/HappyRow"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+show_percentage = false
 
 [node name="Spacer" type="Control" parent="IsoHUD/Safe/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
+[node name="Toast" type="Label" parent="IsoHUD/Safe/VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.18, 0.14, 0.12, 1)
+theme_override_font_sizes/font_size = 18
+text = "..."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="ModeBar" type="HBoxContainer" parent="IsoHUD/Safe/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CareBar" type="HBoxContainer" parent="IsoHUD/Safe/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
 [node name="TabBar" type="HBoxContainer" parent="IsoHUD/Safe/VBox"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 6
 
 [node name="ItemTabBar" type="HBoxContainer" parent="IsoHUD/Safe/VBox"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 6
 
 [node name="VariantBar" type="HBoxContainer" parent="IsoHUD/Safe/VBox"]
+visible = false
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_constants/separation = 8
+
+[node name="MissionPanel" type="PanelContainer" parent="IsoHUD/Safe"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 120.0
+offset_bottom = -160.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="IsoHUD/Safe/MissionPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MissionTitle" type="Label" parent="IsoHUD/Safe/MissionPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Misión"
+horizontal_alignment = 1
+
+[node name="MissionProgress" type="Label" parent="IsoHUD/Safe/MissionPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "1 / 8"
+horizontal_alignment = 1
+
+[node name="MissionDetail" type="Label" parent="IsoHUD/Safe/MissionPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "..."
+autowrap_mode = 2
+horizontal_alignment = 1
+
+[node name="MissionReward" type="Label" parent="IsoHUD/Safe/MissionPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Recompensa"
+horizontal_alignment = 1
+
+[node name="CloseMission" type="Button" parent="IsoHUD/Safe/MissionPanel/VBox"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
+text = "Cerrar"
+
+[node name="ShopPanel" type="PanelContainer" parent="IsoHUD/Safe"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 120.0
+offset_bottom = -160.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="IsoHUD/Safe/ShopPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ShopTitle" type="Label" parent="IsoHUD/Safe/ShopPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Tienda"
+horizontal_alignment = 1
+
+[node name="ShopList" type="VBoxContainer" parent="IsoHUD/Safe/ShopPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CloseShop" type="Button" parent="IsoHUD/Safe/ShopPanel/VBox"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 20
+text = "Cerrar"
