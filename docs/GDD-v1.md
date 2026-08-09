@@ -334,4 +334,5 @@ Si eso ocurre, el juego ya ganó. El resto es expansión.
 - **Hito 1 listo:** gata **Miel** con Hambre / Energía / Felicidad; acciones Comer, Mimos, Jugar, Dormir; recompensa en Huellitas.
 - **Hito 2 listo:** Mochila + colocar Cama/Plato/Rascador/Juguete/Maceta en cuadrícula; Girar/Guardar/Listo.
 - **Hito 3 listo:** 8 misiones + Tienda de Huellitas + progreso guardado.
-- Siguiente: **Hito 4** — pulido, 2.º/3.er gato, sonido y export APK Android.
+- **APK Android debug listo:** exportable con `tools/build_android_apk.sh` (ver `docs/INSTALAR-ANDROID.md`).
+- Siguiente: **Hito 4** — pulido, 2.º/3.er gato, sonido y mejoras tras probar en el celular.
