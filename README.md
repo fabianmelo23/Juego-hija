@@ -4,35 +4,35 @@ Juego 2D pixel art para **Android**, pensado para una niña de 11 años a la que
 
 **Fantasía:** eres una cuidadora de gatos.  
 **Moneda:** Huellitas.  
-**Plataforma V1:** Android (vertical, táctil).  
-**Arte inicial:** placeholders.  
-**Avatar:** personaje inventado.
+**Plataforma V1:** Android (vertical, táctil).
 
-## Qué hay de nuevo (Hito 1)
+## Qué hay de nuevo (Hito 2)
 
-- Aparece **Miel**, tu primer gato
-- Tócala para ver **Hambre / Energía / Felicidad**
-- Botones: **Comer · Mimos · Jugar · Dormir**
-- Cada cuidado bueno suma **Huellitas**
+- Botón **Mochila** con 5 muebles: Cama, Plato, Rascador, Juguete, Maceta
+- Elige un mueble → toca la **casa** para colocarlo (cuadrícula)
+- Botones **Girar · Guardar · Listo**
+- La decoración se guarda sola al pulsar Listo/Guardar
 
-## Cómo probar (PC / entorno de desarrollo)
+## Hito 1 (sigue disponible)
+
+- Cuida a **Miel**: Comer, Mimos, Jugar, Dormir
+
+## Cómo probar (PC / entorno)
 
 ```bash
 bash tools/install_godot.sh
 godot --path .
 ```
 
-1. Toca / clic en **Miel**
-2. Usa los botones de cuidado
-3. Camina tocando el suelo
+1. Abre **Mochila**
+2. Elige **Cama**
+3. Toca el suelo de la **Casa**
+4. Pulsa **Listo**
 
-## Seguir el avance desde el celular
+## Seguir desde el celular
 
-- Chat de Cursor (este hilo)
 - PR: https://github.com/fabianmelo23/Juego-hija/pull/1
-- Repo: https://github.com/fabianmelo23/Juego-hija
-
-Para **jugar en el teléfono de ella** hace falta el APK (más adelante).
+- Jugar en el teléfono: pendiente (APK)
 
 ## Diseño
 

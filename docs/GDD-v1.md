@@ -289,9 +289,9 @@ casa-de-gatos/
 - Alimentar / acariciar / jugar / dormir con botones grandes
 - Feedback visual claro en pantalla chica + Huellitas por cuidado
 
-### Hito 2 — Decoración
-- Inventario + colocar 4–5 muebles con snap a cuadrícula
-- Guardar layout de la habitación
+### Hito 2 — Decoración ✅
+- Inventario (Mochila) + colocar 5 muebles con snap a cuadrícula
+- Girar / Guardar / Listo + layout persistente en el dispositivo
 
 ### Hito 3 — Misiones + economía
 - 8 misiones encadenadas suaves
@@ -332,4 +332,5 @@ Si eso ocurre, el juego ya ganó. El resto es expansión.
 
 - **Hito 0 listo:** esqueleto móvil (mapa, tap-to-move, HUD, Huellitas).
 - **Hito 1 listo:** gata **Miel** con Hambre / Energía / Felicidad; acciones Comer, Mimos, Jugar, Dormir; recompensa en Huellitas.
-- Siguiente: **Hito 2** — decorar habitación (inventario + colocar muebles).
+- **Hito 2 listo:** Mochila + colocar Cama/Plato/Rascador/Juguete/Maceta en cuadrícula; Girar/Guardar/Listo.
+- Siguiente: **Hito 3** — misiones cortas + economía con Huellitas.

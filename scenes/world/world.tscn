@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://bqworld001casa"]
+[gd_scene load_steps=6 format=3 uid="uid://bqworld001casa"]
 
 [ext_resource type="Script" path="res://scripts/world/world_controller.gd" id="1_world"]
 [ext_resource type="PackedScene" uid="uid://bqplayer001casa" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" uid="uid://bqtouchhud001" path="res://scenes/ui/touch_hud.tscn" id="3_hud"]
 [ext_resource type="PackedScene" uid="uid://bqcatmiel001" path="res://scenes/cats/cat.tscn" id="4_cat"]
+[ext_resource type="PackedScene" uid="uid://bqroomdeco001" path="res://scenes/furniture/room_decorator.tscn" id="5_deco"]
 
 [node name="World" type="Node2D"]
 script = ExtResource("1_world")
@@ -66,6 +67,8 @@ theme_override_colors/font_color = Color(0.2, 0.32, 0.18, 1)
 theme_override_font_sizes/font_size = 22
 text = "Jardín"
 horizontal_alignment = 1
+
+[node name="RoomDecorator" parent="." instance=ExtResource("5_deco")]
 
 [node name="Cat" parent="." instance=ExtResource("4_cat")]
 position = Vector2(-80, -200)
