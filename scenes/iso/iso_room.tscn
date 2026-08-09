@@ -1,0 +1,57 @@
+[gd_scene load_steps=2 format=3 uid="uid://bqisoroom001"]
+
+[ext_resource type="Script" path="res://scripts/iso/iso_room.gd" id="1_room"]
+
+[node name="IsoRoom" type="Node2D"]
+script = ExtResource("1_room")
+
+[node name="Background" type="Polygon2D" parent="."]
+z_index = -10
+color = Color(0.78, 0.86, 0.9, 1)
+polygon = PackedVector2Array(-200, -200, 920, -200, 920, 1500, -200, 1500)
+
+[node name="RoomRoot" type="Node2D" parent="."]
+
+[node name="FloorLayer" type="Node2D" parent="RoomRoot"]
+
+[node name="IsoHUD" type="CanvasLayer" parent="."]
+
+[node name="Safe" type="MarginContainer" parent="IsoHUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="IsoHUD/Safe"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="IsoHUD/Safe/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.14, 0.12, 1)
+theme_override_font_sizes/font_size = 26
+text = "Casa de Gatos — Cuarto iso"
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="IsoHUD/Safe/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.28, 0.22, 0.18, 1)
+theme_override_font_sizes/font_size = 18
+text = "Ítem 01: Piso base"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="IsoHUD/Safe/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="VariantBar" type="HBoxContainer" parent="IsoHUD/Safe/VBox"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/separation = 8

@@ -8,9 +8,12 @@ Público: un juego 2D pixel art para una niña de 11 años a la que le gustan lo
 ## 1. Fantasía central
 
 **Eres una cuidadora de gatos.**  
-Llegas a una casita sencilla con un jardín. Tu trabajo (y tu alegría) es cuidar gatos, decorar su hogar y completar encargos sencillos.
+El hogar principal es un **cuarto isométrico** personalizable (piso, paredes, luces, muebles).  
+Tu trabajo (y tu alegría) es cuidar gatos, decorar ese espacio y completar encargos sencillos.
 
 Si algo no refuerza “cuidar gatos + hacer un hogar bonito”, no entra en la Versión 1.
+
+Dirección visual isométrica y catálogo de objetos: [`docs/ISO-ROOM-DIRECTOR.md`](ISO-ROOM-DIRECTOR.md).
 
 ---
 
