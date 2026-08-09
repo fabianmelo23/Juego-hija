@@ -20,7 +20,7 @@ Catálogo y orden de creación: [`docs/ISO-ROOM-DIRECTOR.md`](docs/ISO-ROOM-DIRE
 - ✅ **Ítem 22 — Rascador** (Ninguno / Madera / Rubor / Menta)
 - ✅ **Ítem 24 — Pelota** (Ninguna / Roja / Cielo / Sol)
 - ✅ **Miel + cuidados** en el cuarto iso (Cuidar / Misión / Tienda)
-- 🔜 Colocación libre en el grid iso
+- ✅ **Colocación libre** en el grid (mover muebles tocando el piso)
 
 ## APK de prueba
 

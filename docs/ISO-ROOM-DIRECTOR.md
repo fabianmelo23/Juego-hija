@@ -152,7 +152,7 @@ Trabajamos **uno por uno**. No se salta de categoría sin cerrar el shell.
 11. **22 `scratcher`** ✅ hecho (Ninguno / Madera / Rubor / Menta)  
 12. **24 `toy_ball`** ✅ hecho (Ninguna / Roja / Cielo / Sol)  
 13. **Migrar Miel + cuidados** ✅ hecho (Cuidar / misiones / tienda golosina)  
-14. Migrar mochila/colocación al grid iso ← siguiente
+14. **Colocación libre en grid iso** ✅ hecho (tocar piso para mover + guardado)
 
 ### Fase P3 — Personalidad del espacio
 15–36 según demanda de tu hija / misiones / tienda
@@ -210,4 +210,4 @@ Hasta que el shell (piso + 2 paredes) no esté sólido, no avanzamos a 20 mueble
 
 ## 10. Siguiente acción inmediata
 
-**Migrar mochila/colocación** al grid isométrico (mover muebles tocando casillas, no solo variantes fijas).
+Pulir jugabilidad: animaciones de Miel, más muebles a demanda, o generar APK de prueba cuando lo pidas.

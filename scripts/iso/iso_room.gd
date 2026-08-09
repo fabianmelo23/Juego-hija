@@ -16,16 +16,17 @@ signal toy_changed(variant_id: String)
 const ROOM_SIZE := Vector2i(8, 8)
 const WALL_HEIGHT := 64
 const WINDOW_SLOT_X := 3 # posición en la pared derecha
-const RUG_ORIGIN := Vector2i(3, 3) # huella 2×2
-const BED_ORIGIN := Vector2i(5, 2) # huella ~2×2
-const BOWL_ORIGIN := Vector2i(2, 5) # huella 1×1
-const SCRATCHER_ORIGIN := Vector2i(1, 2) # huella 1×2
-const TOY_ORIGIN := Vector2i(4, 5) # huella 1×1
+const RUG_ORIGIN := Vector2i(3, 3) # default
+const BED_ORIGIN := Vector2i(5, 2)
+const BOWL_ORIGIN := Vector2i(2, 5)
+const SCRATCHER_ORIGIN := Vector2i(1, 2)
+const TOY_ORIGIN := Vector2i(4, 5)
 
 @onready var room_root: Node2D = $RoomRoot
 @onready var floor_layer: Node2D = $RoomRoot/FloorLayer
 @onready var rug_layer: Node2D = $RoomRoot/RugLayer
 @onready var furniture_layer: Node2D = $RoomRoot/FurnitureLayer
+@onready var ghost_layer: Node2D = $RoomRoot/GhostLayer
 @onready var wall_left_layer: Node2D = $RoomRoot/WallLeftLayer
 @onready var wall_right_layer: Node2D = $RoomRoot/WallRightLayer
 @onready var wallpaper_left_layer: Node2D = $RoomRoot/WallpaperLeftLayer
@@ -64,6 +65,12 @@ var _bed_sprite: Sprite2D
 var _bowl_sprite: Sprite2D
 var _scratcher_sprite: Sprite2D
 var _toy_sprite: Sprite2D
+var _ghost_layer: Node2D
+var _rug_cell: Vector2i = RUG_ORIGIN
+var _bed_cell: Vector2i = BED_ORIGIN
+var _bowl_cell: Vector2i = BOWL_ORIGIN
+var _scratcher_cell: Vector2i = SCRATCHER_ORIGIN
+var _toy_cell: Vector2i = TOY_ORIGIN
 
 var _current_floor: String = "floor_wood_light"
 var _current_wall_left: String = "wall_left_cream"
@@ -166,6 +173,9 @@ func _ready() -> void:
 	_build_bowl()
 	_build_scratcher()
 	_build_toy()
+	_ghost_layer = ghost_layer
+	_load_iso_layout()
+	_apply_all_furniture_transforms()
 	_build_tabs()
 	_rebuild_variant_buttons()
 	title_label.text = "Casa de Gatos"
@@ -231,11 +241,12 @@ func _build_mode_bar() -> void:
 		button.pressed.connect(func() -> void:
 			match target:
 				"care":
+					_clear_ghost()
 					gameplay.set_mode("care")
 					hint_label.text = "Toca a Miel para cuidarla"
 				"decorate":
 					gameplay.set_mode("decorate")
-					hint_label.text = "Elige qué quieres cambiar"
+					hint_label.text = "Elige un mueble y toca el piso para moverlo"
 					_set_edit_target(_edit_target)
 				"mission":
 					gameplay.open_mission()
@@ -270,6 +281,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		tap_pos = event.position
 	if tap_pos != null:
+		if gameplay.get_mode() == "decorate" and _try_place_at_screen(tap_pos):
+			get_viewport().set_input_as_handled()
+			return
 		if gameplay.handle_tap(tap_pos):
 			get_viewport().set_input_as_handled()
 
@@ -456,11 +470,8 @@ func _build_rug() -> void:
 	_rug_sprite = Sprite2D.new()
 	_rug_sprite.centered = false
 	_rug_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var anchor := IsoMath.grid_to_screen(RUG_ORIGIN)
-	# PNG 128×72 con 4px de padding superior sobre el diamante 2×2.
-	_rug_sprite.position = anchor - Vector2(64, 4)
-	_rug_sprite.z_index = 20 + RUG_ORIGIN.x + RUG_ORIGIN.y
 	rug_layer.add_child(_rug_sprite)
+	_apply_furniture_transform("rug")
 
 
 
@@ -471,11 +482,8 @@ func _build_bed() -> void:
 	_bed_sprite.name = "Bed"
 	_bed_sprite.centered = false
 	_bed_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var anchor := IsoMath.grid_to_screen(BED_ORIGIN)
-	# Sprite 96×64 anclado al tip norte del tile origen.
-	_bed_sprite.position = anchor - Vector2(48, 28)
-	_bed_sprite.z_index = 30 + BED_ORIGIN.x + BED_ORIGIN.y
 	furniture_layer.add_child(_bed_sprite)
+	_apply_furniture_transform("bed")
 
 
 func _build_bowl() -> void:
@@ -485,10 +493,8 @@ func _build_bowl() -> void:
 	_bowl_sprite.name = "Bowl"
 	_bowl_sprite.centered = false
 	_bowl_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var anchor := IsoMath.grid_to_screen(BOWL_ORIGIN)
-	_bowl_sprite.position = anchor - Vector2(20, 8)
-	_bowl_sprite.z_index = 30 + BOWL_ORIGIN.x + BOWL_ORIGIN.y
 	furniture_layer.add_child(_bowl_sprite)
+	_apply_furniture_transform("bowl")
 
 
 func _build_scratcher() -> void:
@@ -498,11 +504,8 @@ func _build_scratcher() -> void:
 	_scratcher_sprite.name = "Scratcher"
 	_scratcher_sprite.centered = false
 	_scratcher_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var anchor := IsoMath.grid_to_screen(SCRATCHER_ORIGIN)
-	# Poste alto 48×80; base cerca del tip del tile.
-	_scratcher_sprite.position = anchor - Vector2(24, 64)
-	_scratcher_sprite.z_index = 30 + SCRATCHER_ORIGIN.x + SCRATCHER_ORIGIN.y
 	furniture_layer.add_child(_scratcher_sprite)
+	_apply_furniture_transform("scratcher")
 
 
 
@@ -513,10 +516,8 @@ func _build_toy() -> void:
 	_toy_sprite.name = "Toy"
 	_toy_sprite.centered = false
 	_toy_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var anchor := IsoMath.grid_to_screen(TOY_ORIGIN)
-	_toy_sprite.position = anchor - Vector2(16, 8)
-	_toy_sprite.z_index = 30 + TOY_ORIGIN.x + TOY_ORIGIN.y
 	furniture_layer.add_child(_toy_sprite)
+	_apply_furniture_transform("toy")
 
 
 func _build_tabs() -> void:
@@ -553,6 +554,8 @@ func _add_tab_button(parent: HBoxContainer, label: String, target: String) -> vo
 func _set_edit_target(target: String) -> void:
 	_edit_target = target
 	_rebuild_variant_buttons()
+	if target not in ["rug", "bed", "bowl", "scratcher", "toy"]:
+		_clear_ghost()
 	match target:
 		"floor":
 			hint_label.text = "Editando: Piso · %s" % _nice_name(_floor_variants, _current_floor)
@@ -567,15 +570,20 @@ func _set_edit_target(target: String) -> void:
 		"wallpaper":
 			hint_label.text = "Editando: Papel · %s" % _nice_name(_wallpaper_variants, _current_wallpaper)
 		"rug":
-			hint_label.text = "Editando: Alfombra · %s" % _nice_name(_rug_variants, _current_rug)
+			hint_label.text = "Alfombra · %s · toca el piso para mover" % _nice_name(_rug_variants, _current_rug)
+			_preview_ghost_for_target()
 		"bed":
-			hint_label.text = "Editando: Cama · %s" % _nice_name(_bed_variants, _current_bed)
+			hint_label.text = "Cama · %s · toca el piso para mover" % _nice_name(_bed_variants, _current_bed)
+			_preview_ghost_for_target()
 		"bowl":
-			hint_label.text = "Editando: Plato · %s" % _nice_name(_bowl_variants, _current_bowl)
+			hint_label.text = "Plato · %s · toca el piso para mover" % _nice_name(_bowl_variants, _current_bowl)
+			_preview_ghost_for_target()
 		"scratcher":
-			hint_label.text = "Editando: Rascador · %s" % _nice_name(_scratcher_variants, _current_scratcher)
+			hint_label.text = "Rascador · %s · toca el piso para mover" % _nice_name(_scratcher_variants, _current_scratcher)
+			_preview_ghost_for_target()
 		"toy":
-			hint_label.text = "Editando: Pelota · %s" % _nice_name(_toy_variants, _current_toy)
+			hint_label.text = "Pelota · %s · toca el piso para mover" % _nice_name(_toy_variants, _current_toy)
+			_preview_ghost_for_target()
 
 
 func _variants_for_target() -> Array:
@@ -757,6 +765,7 @@ func set_rug_variant(variant_id: String) -> void:
 		hint_label.text = "Editando: Alfombra · %s" % _nice_name(_rug_variants, variant_id)
 	rug_changed.emit(variant_id)
 	_notify_place_once("rug", variant_id != "rug_small_none")
+	_save_iso_layout()
 
 
 
@@ -771,6 +780,7 @@ func set_bed_variant(variant_id: String) -> void:
 		hint_label.text = "Editando: Cama · %s" % _nice_name(_bed_variants, variant_id)
 	bed_changed.emit(variant_id)
 	_notify_place_once("bed", variant_id != "bed_cat_none")
+	_save_iso_layout()
 
 
 
@@ -785,6 +795,7 @@ func set_bowl_variant(variant_id: String) -> void:
 		hint_label.text = "Editando: Plato · %s" % _nice_name(_bowl_variants, variant_id)
 	bowl_changed.emit(variant_id)
 	_notify_place_once("bowl", variant_id != "bowl_food_none")
+	_save_iso_layout()
 
 
 func set_scratcher_variant(variant_id: String) -> void:
@@ -798,6 +809,7 @@ func set_scratcher_variant(variant_id: String) -> void:
 		hint_label.text = "Editando: Rascador · %s" % _nice_name(_scratcher_variants, variant_id)
 	scratcher_changed.emit(variant_id)
 	_notify_place_once("scratcher", variant_id != "scratcher_none")
+	_save_iso_layout()
 
 
 
@@ -812,6 +824,7 @@ func set_toy_variant(variant_id: String) -> void:
 		hint_label.text = "Editando: Pelota · %s" % _nice_name(_toy_variants, variant_id)
 	toy_changed.emit(variant_id)
 	_notify_place_once("toy", variant_id != "toy_ball_none")
+	_save_iso_layout()
 
 
 func get_current_floor_variant() -> String:
@@ -861,6 +874,244 @@ func get_current_toy_variant() -> String:
 
 
 
+
+
+
+func _furniture_cell(item_id: String) -> Vector2i:
+	match item_id:
+		"rug":
+			return _rug_cell
+		"bed":
+			return _bed_cell
+		"bowl":
+			return _bowl_cell
+		"scratcher":
+			return _scratcher_cell
+		"toy":
+			return _toy_cell
+		_:
+			return Vector2i.ZERO
+
+
+func _set_furniture_cell(item_id: String, cell: Vector2i) -> void:
+	match item_id:
+		"rug":
+			_rug_cell = cell
+		"bed":
+			_bed_cell = cell
+		"bowl":
+			_bowl_cell = cell
+		"scratcher":
+			_scratcher_cell = cell
+		"toy":
+			_toy_cell = cell
+
+
+func _furniture_sprite(item_id: String) -> Sprite2D:
+	match item_id:
+		"rug":
+			return _rug_sprite
+		"bed":
+			return _bed_sprite
+		"bowl":
+			return _bowl_sprite
+		"scratcher":
+			return _scratcher_sprite
+		"toy":
+			return _toy_sprite
+		_:
+			return null
+
+
+func _furniture_variant(item_id: String) -> String:
+	match item_id:
+		"rug":
+			return _current_rug
+		"bed":
+			return _current_bed
+		"bowl":
+			return _current_bowl
+		"scratcher":
+			return _current_scratcher
+		"toy":
+			return _current_toy
+		_:
+			return ""
+
+
+func _is_furniture_present(item_id: String) -> bool:
+	var v := _furniture_variant(item_id)
+	return v != "" and not v.ends_with("_none") and not v.ends_with("wallpaper_none")
+
+
+func _apply_furniture_transform(item_id: String) -> void:
+	var d: Dictionary = IsoPlacer.def_for(item_id)
+	if d.is_empty():
+		return
+	var sprite := _furniture_sprite(item_id)
+	if sprite == null:
+		return
+	var cell := _furniture_cell(item_id)
+	sprite.position = IsoPlacer.sprite_pos(cell, d["anchor"])
+	sprite.z_index = IsoPlacer.sprite_z(cell, int(d["z_base"]))
+
+
+func _apply_all_furniture_transforms() -> void:
+	for id in ["rug", "bed", "bowl", "scratcher", "toy"]:
+		_apply_furniture_transform(id)
+
+
+func _hard_occupied_cells(ignore_id: String = "") -> Dictionary:
+	var occ: Dictionary = {}
+	for item_id in ["bed", "scratcher"]:
+		if item_id == ignore_id:
+			continue
+		if not _is_furniture_present(item_id):
+			continue
+		var d: Dictionary = IsoPlacer.def_for(item_id)
+		for cell in IsoPlacer.footprint_cells(_furniture_cell(item_id), d["size"]):
+			occ["%d,%d" % [cell.x, cell.y]] = item_id
+	return occ
+
+
+func _can_place_item(item_id: String, origin: Vector2i) -> bool:
+	var d: Dictionary = IsoPlacer.def_for(item_id)
+	if d.is_empty():
+		return false
+	if not IsoPlacer.footprint_in_room(origin, d["size"], ROOM_SIZE):
+		return false
+	if bool(d.get("soft", true)):
+		return true
+	var occ := _hard_occupied_cells(item_id)
+	for cell in IsoPlacer.footprint_cells(origin, d["size"]):
+		if occ.has("%d,%d" % [cell.x, cell.y]):
+			return false
+	return true
+
+
+func _show_ghost_at(item_id: String, origin: Vector2i) -> void:
+	for child in ghost_layer.get_children():
+		child.queue_free()
+	var d: Dictionary = IsoPlacer.def_for(item_id)
+	if d.is_empty():
+		return
+	var ok := _can_place_item(item_id, origin)
+	var color := Color(0.35, 0.85, 0.45, 0.45) if ok else Color(0.9, 0.25, 0.25, 0.45)
+	for cell in IsoPlacer.footprint_cells(origin, d["size"]):
+		var poly := Polygon2D.new()
+		poly.color = color
+		poly.polygon = IsoPlacer.diamond_polygon(cell)
+		poly.z_index = 100
+		ghost_layer.add_child(poly)
+
+
+func _clear_ghost() -> void:
+	if ghost_layer == null:
+		return
+	for child in ghost_layer.get_children():
+		child.queue_free()
+
+
+func _screen_to_grid(screen_pos: Vector2) -> Vector2i:
+	var world: Vector2 = get_canvas_transform().affine_inverse() * screen_pos
+	var local: Vector2 = room_root.to_local(world)
+	# Apunta al centro del diamante para un pick más natural.
+	return IsoMath.screen_to_grid(local + Vector2(0, IsoMath.TILE_H * 0.25))
+
+
+func _try_place_at_screen(screen_pos: Vector2) -> bool:
+	if _edit_target not in ["rug", "bed", "bowl", "scratcher", "toy"]:
+		_clear_ghost()
+		return false
+	if not _is_furniture_present(_edit_target):
+		hint_label.text = "Elige un color/variante antes de mover"
+		gameplay.show_toast("Elige una variante primero")
+		return true
+	var cell := _screen_to_grid(screen_pos)
+	_show_ghost_at(_edit_target, cell)
+	if not _can_place_item(_edit_target, cell):
+		gameplay.show_toast("No cabe ahí")
+		return true
+	_set_furniture_cell(_edit_target, cell)
+	_apply_furniture_transform(_edit_target)
+	_notify_place_once(_edit_target, true)
+	_save_iso_layout()
+	_show_ghost_at(_edit_target, cell)
+	var nice := _edit_target
+	match _edit_target:
+		"rug":
+			nice = "Alfombra"
+		"bed":
+			nice = "Cama"
+		"bowl":
+			nice = "Plato"
+		"scratcher":
+			nice = "Rascador"
+		"toy":
+			nice = "Pelota"
+	hint_label.text = "%s movida · toca otra casilla" % nice
+	gameplay.show_toast("%s colocada" % nice)
+	return true
+
+
+func _save_iso_layout() -> void:
+	var data := {
+		"rug": {"variant": _current_rug, "cell": [_rug_cell.x, _rug_cell.y]},
+		"bed": {"variant": _current_bed, "cell": [_bed_cell.x, _bed_cell.y]},
+		"bowl": {"variant": _current_bowl, "cell": [_bowl_cell.x, _bowl_cell.y]},
+		"scratcher": {"variant": _current_scratcher, "cell": [_scratcher_cell.x, _scratcher_cell.y]},
+		"toy": {"variant": _current_toy, "cell": [_toy_cell.x, _toy_cell.y]},
+	}
+	IsoPlacer.save_layout(data)
+
+
+func _load_iso_layout() -> void:
+	var data := IsoPlacer.load_layout()
+	if data.is_empty():
+		return
+	for item_id in ["rug", "bed", "bowl", "scratcher", "toy"]:
+		if not data.has(item_id):
+			continue
+		var entry = data[item_id]
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var cell_arr = entry.get("cell", null)
+		if typeof(cell_arr) == TYPE_ARRAY and cell_arr.size() >= 2:
+			_set_furniture_cell(item_id, Vector2i(int(cell_arr[0]), int(cell_arr[1])))
+		var variant := str(entry.get("variant", ""))
+		if variant != "":
+			match item_id:
+				"rug":
+					_current_rug = variant
+				"bed":
+					_current_bed = variant
+				"bowl":
+					_current_bowl = variant
+				"scratcher":
+					_current_scratcher = variant
+				"toy":
+					_current_toy = variant
+
+
+func _preview_ghost_for_target() -> void:
+	if _is_furniture_present(_edit_target):
+		_show_ghost_at(_edit_target, _furniture_cell(_edit_target))
+	else:
+		_clear_ghost()
+
+
+func get_furniture_cell(item_id: String) -> Vector2i:
+
+	return _furniture_cell(item_id)
+
+
+func move_furniture_to(item_id: String, cell: Vector2i) -> bool:
+	if not _can_place_item(item_id, cell):
+		return false
+	_set_furniture_cell(item_id, cell)
+	_apply_furniture_transform(item_id)
+	_save_iso_layout()
+	return true
 
 
 func _nice_name(list: Array, id: String) -> String:

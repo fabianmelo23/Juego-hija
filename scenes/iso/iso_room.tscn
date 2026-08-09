@@ -31,6 +31,8 @@ polygon = PackedVector2Array(-200, -200, 920, -200, 920, 1500, -200, 1500)
 
 [node name="CatLayer" type="Node2D" parent="RoomRoot"]
 
+[node name="GhostLayer" type="Node2D" parent="RoomRoot"]
+
 [node name="LightLayer" type="Node2D" parent="RoomRoot"]
 
 [node name="Gameplay" type="Node" parent="."]
