@@ -81,9 +81,10 @@ var _toy_cell: Vector2i = TOY_ORIGIN
 var _current_floor: String = "floor_wood_light"
 var _current_wall_left: String = "wall_left_cream"
 var _current_wall_right: String = "wall_right_cream"
-var _current_window: String = "window_small_day"
-var _current_light: String = "light_ceiling_warm"
+var _current_window: String = "window_none"
+var _current_light: String = "light_none"
 var _current_wallpaper: String = "wallpaper_none"
+var inventory: GameInventory = GameInventory.new()
 var _current_rug: String = "rug_small_blush"
 var _current_bed: String = "bed_cat_none"
 var _current_bowl: String = "bowl_food_full"
@@ -112,12 +113,14 @@ var _wall_right_variants := [
 ]
 
 var _window_variants := [
+	{"id": "window_none", "name": "Ninguna"},
 	{"id": "window_small_day", "name": "Día"},
 	{"id": "window_small_evening", "name": "Tarde"},
 	{"id": "window_small_night", "name": "Noche"},
 ]
 
 var _light_variants := [
+	{"id": "light_none", "name": "Ninguna"},
 	{"id": "light_ceiling_warm", "name": "Cálida"},
 	{"id": "light_ceiling_rose", "name": "Rosa"},
 	{"id": "light_ceiling_off", "name": "Apagada"},
@@ -338,15 +341,23 @@ func _setup_camera_and_catalog() -> void:
 	catalog_ui.offset_bottom = 0.0
 	safe.add_child(catalog_ui)
 
+	catalog_ui.bind_inventory(inventory)
+	catalog_ui.bind_free_items(free_items)
 	catalog_ui.drag_started.connect(_on_catalog_drag_started)
 	catalog_ui.drag_updated.connect(_on_catalog_drag_updated)
 	catalog_ui.drag_dropped.connect(_on_catalog_drag_dropped)
 	catalog_ui.drag_cancelled.connect(_on_catalog_drag_cancelled)
 	catalog_ui.ambient_selected.connect(_on_catalog_ambient)
+	inventory.changed.connect(func() -> void:
+		if catalog_ui:
+			catalog_ui.refresh()
+	)
 
 	if free_items:
 		free_items.item_placed.connect(func(item_id: String, _variant_id: String) -> void:
 			_notify_place_once(item_id, true)
+			if catalog_ui:
+				catalog_ui.refresh()
 		)
 
 	# Zoom buttons
@@ -381,6 +392,10 @@ func _screen_to_room_local(screen_pos: Vector2) -> Vector2:
 
 
 func _on_catalog_drag_started(item_id: String, variant_id: String, _texture: Texture2D) -> void:
+	# Solo se puede sacar del inventario si hay unidades o ya está en el cuarto (mover).
+	if not free_items.has_item(item_id) and not inventory.can_use(item_id):
+		gameplay.show_toast("No te queda en el inventario")
+		return
 	_drag_active = true
 	set_meta("drag_item_id", item_id)
 	set_meta("drag_variant_id", variant_id)
@@ -400,10 +415,22 @@ func _on_catalog_drag_dropped(item_id: String, variant_id: String, screen_pos: V
 	_drag_active = false
 	if camera_ctrl:
 		camera_ctrl.pan_enabled = true
+	var already: bool = free_items.has_item(item_id)
+	if not already:
+		if not inventory.consume(item_id):
+			free_items.hide_ghost()
+			gameplay.show_toast("No te queda en el inventario")
+			return
 	var local := _screen_to_room_local(screen_pos)
 	free_items.place_or_move(item_id, variant_id, local)
-	gameplay.show_toast("Colocado: %s" % item_id)
-	hint_label.text = "Suelta cerca de una mesa para apilar (ej. pelota)"
+	var pretty := item_id
+	var data := FurnitureCatalog.by_id(item_id)
+	if not data.is_empty():
+		pretty = str(data.get("name", item_id))
+	gameplay.show_toast("Colocado: %s" % pretty)
+	hint_label.text = "Inventario → arrastra al cuarto"
+	if catalog_ui:
+		catalog_ui.refresh()
 
 
 func _on_catalog_drag_cancelled() -> void:
@@ -438,9 +465,17 @@ func _load_textures() -> void:
 	for v in _wall_right_variants:
 		_wall_right_textures[str(v["id"])] = load("res://assets/art/iso/walls/%s.png" % str(v["id"]))
 	for v in _window_variants:
-		_window_textures[str(v["id"])] = load("res://assets/art/iso/windows/%s.png" % str(v["id"]))
+		var wid := str(v["id"])
+		if wid == "window_none":
+			_window_textures[wid] = null
+		else:
+			_window_textures[wid] = load("res://assets/art/iso/windows/%s.png" % wid)
 	for v in _light_variants:
-		_light_textures[str(v["id"])] = load("res://assets/art/iso/lights/%s.png" % str(v["id"]))
+		var lid := str(v["id"])
+		if lid == "light_none":
+			_light_textures[lid] = null
+		else:
+			_light_textures[lid] = load("res://assets/art/iso/lights/%s.png" % lid)
 	for v in _wallpaper_variants:
 		var wid := str(v["id"])
 		if wid == "wallpaper_none":
@@ -802,7 +837,9 @@ func set_window_variant(variant_id: String) -> void:
 	if not _window_textures.has(variant_id) or _window_sprite == null:
 		return
 	_current_window = variant_id
-	_window_sprite.texture = _window_textures[variant_id]
+	var tex = _window_textures[variant_id]
+	_window_sprite.texture = tex
+	_window_sprite.visible = tex != null
 	_apply_room_mood()
 	if _edit_target == "window":
 		hint_label.text = "Editando: Ventana · %s" % _nice_name(_window_variants, variant_id)
@@ -813,7 +850,9 @@ func set_light_variant(variant_id: String) -> void:
 	if not _light_textures.has(variant_id) or _light_sprite == null:
 		return
 	_current_light = variant_id
-	_light_sprite.texture = _light_textures[variant_id]
+	var tex = _light_textures[variant_id]
+	_light_sprite.texture = tex
+	_light_sprite.visible = tex != null
 	_apply_room_mood()
 	if _edit_target == "light":
 		hint_label.text = "Editando: Lámpara · %s" % _nice_name(_light_variants, variant_id)
@@ -828,10 +867,14 @@ func _apply_room_mood() -> void:
 			base = Color(0.90, 0.78, 0.68, 1)
 		"window_small_night":
 			base = Color(0.35, 0.42, 0.55, 1)
+		"window_none":
+			base = Color(0.82, 0.84, 0.86, 1)
 		_:
 			base = Color(0.78, 0.86, 0.90, 1)
 
 	match _current_light:
+		"light_none":
+			room_root.modulate = Color(1, 1, 1, 1)
 		"light_ceiling_warm":
 			base = base.lerp(Color(1.0, 0.92, 0.75, 1), 0.28)
 			room_root.modulate = Color(1.05, 1.0, 0.94, 1)

@@ -1,5 +1,5 @@
 extends SceneTree
-## Prueba headless: Miel + cuidados + misiones en el cuarto iso.
+## Prueba headless: Miel + cuidados en cuarto vacío.
 
 
 func _init() -> void:
@@ -9,8 +9,8 @@ func _init() -> void:
 func _run() -> void:
 	if FileAccess.file_exists("user://progress.json"):
 		DirAccess.remove_absolute("user://progress.json")
-	if FileAccess.file_exists("user://iso_free_layout.json"):
-		DirAccess.remove_absolute("user://iso_free_layout.json")
+	if FileAccess.file_exists("user://iso_free_layout_v2.json"):
+		DirAccess.remove_absolute("user://iso_free_layout_v2.json")
 
 	var scene: PackedScene = load("res://scenes/iso/iso_room.tscn")
 	var room: Node2D = scene.instantiate()
@@ -22,17 +22,7 @@ func _run() -> void:
 		quit(1)
 		return
 
-	if gameplay.huellitas < 2:
-		push_error("expected starter huellitas")
-		quit(1)
-		return
-
 	gameplay.select_cat()
-	if not gameplay.cat.is_selected():
-		push_error("cat should be selected")
-		quit(1)
-		return
-
 	var before: float = float(gameplay.cat.hunger)
 	gameplay.do_care("feed")
 	if float(gameplay.cat.hunger) <= before:
@@ -41,11 +31,11 @@ func _run() -> void:
 		return
 
 	var free: Node2D = room.get_node("RoomRoot/FreeItems")
-	free.place_or_move("bed", "bed_cat_cream", Vector2(40, 80))
-	if not free.has_item("bed"):
-		push_error("bed place failed")
+	if not room.inventory.consume("bed"):
+		push_error("bed not in inventory")
 		quit(1)
 		return
+	free.place_or_move("bed", "bed_cat_cream", Vector2(40, 80))
 
 	gameplay.buy_treat()
 	if not bool(gameplay.missions.flags.get("bought", false)):

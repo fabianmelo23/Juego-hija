@@ -1,5 +1,5 @@
 extends Control
-## Menú izquierdo por categorías con preview y drag-and-drop al cuarto.
+## Inventario / catálogo lateral: categorías, preview y drag-and-drop.
 
 signal drag_started(item_id: String, variant_id: String, texture: Texture2D)
 signal drag_updated(screen_pos: Vector2)
@@ -8,6 +8,19 @@ signal drag_cancelled
 signal ambient_selected(category: String, variant_id: String)
 
 const CATEGORIES := [
+	{
+		"id": "inventory",
+		"name": "Inventario",
+		"items": [
+			{"id": "bed", "name": "Cama", "kind": "placeable", "default": "bed_cat_blush", "preview": "res://assets/art/iso/furniture/bed_cat_blush.png"},
+			{"id": "table", "name": "Mesa", "kind": "placeable", "default": "table_low_wood", "preview": "res://assets/art/iso/furniture/table_low_wood.png"},
+			{"id": "scratcher", "name": "Rascador", "kind": "placeable", "default": "scratcher_wood", "preview": "res://assets/art/iso/furniture/scratcher_wood.png"},
+			{"id": "bowl", "name": "Plato", "kind": "placeable", "default": "bowl_food_full", "preview": "res://assets/art/iso/furniture/bowl_food_full.png"},
+			{"id": "rug", "name": "Alfombra", "kind": "placeable", "default": "rug_small_blush", "preview": "res://assets/art/iso/rugs/rug_small_blush.png"},
+			{"id": "toy", "name": "Pelota", "kind": "placeable", "default": "toy_ball_red", "preview": "res://assets/art/iso/furniture/toy_ball_red.png"},
+			{"id": "plant", "name": "Maceta", "kind": "placeable", "default": "plant", "preview": ""},
+		],
+	},
 	{
 		"id": "ambient",
 		"name": "Ambiente",
@@ -19,32 +32,17 @@ const CATEGORIES := [
 			{"id": "light", "name": "Luz", "kind": "ambient"},
 		],
 	},
-	{
-		"id": "furniture",
-		"name": "Muebles",
-		"items": [
-			{"id": "bed", "name": "Cama", "kind": "placeable", "default": "bed_cat_blush", "preview": "res://assets/art/iso/furniture/bed_cat_blush.png", "stack_h": 0.0},
-			{"id": "table", "name": "Mesa", "kind": "placeable", "default": "table_low_wood", "preview": "res://assets/art/iso/furniture/table_low_wood.png", "stack_h": 22.0},
-			{"id": "scratcher", "name": "Rascador", "kind": "placeable", "default": "scratcher_wood", "preview": "res://assets/art/iso/furniture/scratcher_wood.png", "stack_h": 0.0},
-			{"id": "bowl", "name": "Plato", "kind": "placeable", "default": "bowl_food_full", "preview": "res://assets/art/iso/furniture/bowl_food_full.png", "stack_h": 0.0},
-		],
-	},
-	{
-		"id": "decor",
-		"name": "Decoración",
-		"items": [
-			{"id": "rug", "name": "Alfombra", "kind": "placeable", "default": "rug_small_blush", "preview": "res://assets/art/iso/rugs/rug_small_blush.png", "stack_h": 0.0},
-			{"id": "toy", "name": "Pelota", "kind": "placeable", "default": "toy_ball_red", "preview": "res://assets/art/iso/furniture/toy_ball_red.png", "stack_h": 0.0},
-		],
-	},
 ]
 
+var inventory: GameInventory
+var free_items: Node2D
 var _dragging := false
 var _drag_item: Dictionary = {}
 var _category_box: HBoxContainer
 var _items_box: VBoxContainer
 var _title: Label
-var _current_cat := "furniture"
+var _current_cat := "inventory"
+var _hint: Label
 
 
 func _ready() -> void:
@@ -52,7 +50,25 @@ func _ready() -> void:
 	custom_minimum_size = Vector2(168, 0)
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_build_chrome()
-	show_category("furniture")
+	show_category("inventory")
+
+
+func bind_inventory(inv: GameInventory) -> void:
+	inventory = inv
+	refresh()
+
+
+func bind_free_items(items: Node2D) -> void:
+	free_items = items
+	refresh()
+
+
+func refresh() -> void:
+	show_category(_current_cat)
+
+
+func _is_placed(item_id: String) -> bool:
+	return free_items != null and free_items.has_method("has_item") and free_items.has_item(item_id)
 
 
 func _build_chrome() -> void:
@@ -75,7 +91,7 @@ func _build_chrome() -> void:
 	margin.add_child(root)
 
 	_title = Label.new()
-	_title.text = "Catálogo"
+	_title.text = "Inventario"
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.add_theme_font_size_override("font_size", 18)
 	_title.add_theme_color_override("font_color", Color(0.2, 0.15, 0.12, 1))
@@ -107,12 +123,12 @@ func _build_chrome() -> void:
 	_items_box.add_theme_constant_override("separation", 8)
 	scroll.add_child(_items_box)
 
-	var hint := Label.new()
-	hint.text = "Arrastra al cuarto"
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.add_theme_font_size_override("font_size", 12)
-	hint.add_theme_color_override("font_color", Color(0.35, 0.28, 0.22, 1))
-	root.add_child(hint)
+	_hint = Label.new()
+	_hint.text = "Arrastra al cuarto"
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.add_theme_font_size_override("font_size", 12)
+	_hint.add_theme_color_override("font_color", Color(0.35, 0.28, 0.22, 1))
+	root.add_child(_hint)
 
 
 func show_category(cat_id: String) -> void:
@@ -128,18 +144,29 @@ func show_category(cat_id: String) -> void:
 		return
 	_title.text = str(cat_data["name"])
 	for item in cat_data["items"]:
+		# Oculta plant hasta tener arte.
+		if str(item.get("id", "")) == "plant":
+			continue
 		_items_box.add_child(_make_item_card(item))
 
 
 func _make_item_card(item: Dictionary) -> Control:
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(0, 88)
+	card.custom_minimum_size = Vector2(0, 96)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 4)
 	card.add_child(v)
 
+	var item_id := str(item.get("id", ""))
+	var count := 0
+	if inventory:
+		count = inventory.get_count(item_id)
+
 	var label := Label.new()
-	label.text = str(item.get("name", item.get("id", "")))
+	if str(item.get("kind", "")) == "placeable":
+		label.text = "%s  ×%d" % [str(item.get("name", item_id)), count]
+	else:
+		label.text = str(item.get("name", item_id))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", 14)
 	v.add_child(label)
@@ -156,9 +183,21 @@ func _make_item_card(item: Dictionary) -> Control:
 
 	var kind := str(item.get("kind", ""))
 	if kind == "placeable":
-		card.gui_input.connect(func(event: InputEvent) -> void:
-			_on_card_input(event, item, preview.texture)
-		)
+		var placed := _is_placed(item_id)
+		var can_drag := count > 0 or placed
+		if placed and count <= 0:
+			label.text = "%s  (en cuarto)" % str(item.get("name", item_id))
+		if not can_drag:
+			card.modulate = Color(1, 1, 1, 0.45)
+			var empty := Label.new()
+			empty.text = "Sin unidades"
+			empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			empty.add_theme_font_size_override("font_size", 11)
+			v.add_child(empty)
+		else:
+			card.gui_input.connect(func(event: InputEvent) -> void:
+				_on_card_input(event, item, preview.texture)
+			)
 	else:
 		var btn := Button.new()
 		btn.focus_mode = Control.FOCUS_NONE
@@ -173,18 +212,22 @@ func _make_item_card(item: Dictionary) -> Control:
 
 func _on_card_input(event: InputEvent, item: Dictionary, tex: Texture2D) -> void:
 	if event is InputEventScreenTouch and event.pressed:
-		_start_drag(item, tex, event.position)
+		_start_drag(item, tex)
 		accept_event()
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_start_drag(item, tex, event.position)
+		_start_drag(item, tex)
 		accept_event()
 
 
-func _start_drag(item: Dictionary, tex: Texture2D, _local_pos: Vector2) -> void:
+func _start_drag(item: Dictionary, tex: Texture2D) -> void:
+	var item_id := str(item.get("id", ""))
+	var placed := _is_placed(item_id)
+	if inventory and not inventory.can_use(item_id) and not placed:
+		return
 	_dragging = true
 	_drag_item = item.duplicate(true)
-	var variant := str(item.get("default", item.get("id", "")))
-	drag_started.emit(str(item["id"]), variant, tex)
+	var variant := str(item.get("default", item_id))
+	drag_started.emit(item_id, variant, tex)
 
 
 func _input(event: InputEvent) -> void:
@@ -210,7 +253,6 @@ func _finish_drag(screen_pos: Vector2) -> void:
 	_dragging = false
 	var item := _drag_item
 	_drag_item = {}
-	# Si suelta sobre el catálogo, cancela.
 	if get_global_rect().has_point(screen_pos):
 		drag_cancelled.emit()
 		return

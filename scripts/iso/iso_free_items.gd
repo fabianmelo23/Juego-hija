@@ -3,7 +3,7 @@ extends Node2D
 
 signal item_placed(item_id: String, variant_id: String)
 
-const SAVE_PATH := "user://iso_free_layout.json"
+const SAVE_PATH := "user://iso_free_layout_v2.json"
 
 ## stack_h: altura de superficie para poner cosas encima
 const DEFS := {
@@ -177,17 +177,16 @@ func save_layout() -> void:
 
 
 func load_layout() -> void:
+	# Por defecto el cuarto nace vacío: solo piso/paredes/gato.
+	# Las decoraciones viven en el inventario hasta que el jugador las coloque.
 	if not FileAccess.file_exists(SAVE_PATH):
-		_spawn_defaults()
 		return
 	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if file == null:
-		_spawn_defaults()
 		return
 	var parsed: Variant = JSON.parse_string(file.get_as_text())
 	file.close()
 	if typeof(parsed) != TYPE_DICTIONARY:
-		_spawn_defaults()
 		return
 	for item_id in parsed.keys():
 		if not DEFS.has(item_id):
@@ -208,15 +207,10 @@ func load_layout() -> void:
 		_apply_sprite(item_id)
 
 
-func _spawn_defaults() -> void:
-	# Posiciones iniciales agradables en espacio iso local.
-	var defaults := {
-		"rug": Vector2(0, 96),
-		"bed": Vector2(96, 64),
-		"table": Vector2(-40, 110),
-		"bowl": Vector2(-90, 140),
-		"scratcher": Vector2(-120, 48),
-		"toy": Vector2(20, 130),
-	}
-	for item_id in defaults.keys():
-		place_or_move(item_id, str(DEFS[item_id]["default"]), defaults[item_id])
+func clear_all() -> void:
+	for item_id in _items.keys():
+		var sprite: Sprite2D = _items[item_id].get("sprite")
+		if sprite:
+			sprite.queue_free()
+	_items.clear()
+	save_layout()

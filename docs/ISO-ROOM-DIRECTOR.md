@@ -210,4 +210,4 @@ Hasta que el shell (piso + 2 paredes) no esté sólido, no avanzamos a 20 mueble
 
 ## 10. Siguiente acción inmediata
 
-Pulir jugabilidad: animaciones de Miel, más muebles a demanda, o generar APK de prueba cuando lo pidas.
+Pulir arte de paredes/muebles, más superficies apilables, y animaciones de Miel.
