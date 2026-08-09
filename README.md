@@ -22,7 +22,7 @@ Catálogo y orden de creación: [`docs/ISO-ROOM-DIRECTOR.md`](docs/ISO-ROOM-DIRE
 - ✅ **Miel + cuidados** en el cuarto iso (Cuidar / Misión / Tienda)
 - ✅ **Paredes continuas** (rincón cerrado)
 - ✅ **Zoom / paneo** de cámara
-- ✅ **Catálogo lateral** drag-and-drop + colocación libre / apilar
+- ✅ **Inventario** drag-and-drop (cuarto vacío al inicio; decoraciones en mochila)
 
 ## APK de prueba
 
