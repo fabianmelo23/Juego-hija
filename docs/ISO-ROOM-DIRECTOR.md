@@ -144,10 +144,10 @@ Trabajamos **uno por uno**. No se salta de categoría sin cerrar el shell.
 5. **07 `window_small`** ✅ hecho (Día / Tarde / Noche + mood de fondo)  
 6. **11 `light_ceiling`** ✅ hecho (Cálida / Rosa / Apagada + mood combinado)  
 7. **04 `wallpaper`** ✅ hecho (Ninguno / Puntos / Rayas)  
-8. **15 `rug_small`** ← siguiente
+8. **15 `rug_small`** ✅ hecho (Ninguna / Rubor / Salvia / Cielo) — **P1 cerrado**
 
 ### Fase P2 — Habitación jugable con gatos
-9. **19 `bed_cat`**  
+9. **19 `bed_cat`** ← siguiente  
 10. **20 `bowl_food`**  
 11. **22 `scratcher`**  
 12. **24 `toy_ball`**  
@@ -210,4 +210,4 @@ Hasta que el shell (piso + 2 paredes) no esté sólido, no avanzamos a 20 mueble
 
 ## 10. Siguiente acción inmediata
 
-**Crear Ítem 15 — `rug_small`:** alfombra 2×2 colocable en el piso isométrico.
+**Crear Ítem 19 — `bed_cat`:** cama de gato 2×2 (primer mueble felino jugable).

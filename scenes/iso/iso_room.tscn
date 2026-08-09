@@ -24,6 +24,8 @@ polygon = PackedVector2Array(-200, -200, 920, -200, 920, 1500, -200, 1500)
 
 [node name="FloorLayer" type="Node2D" parent="RoomRoot"]
 
+[node name="RugLayer" type="Node2D" parent="RoomRoot"]
+
 [node name="LightLayer" type="Node2D" parent="RoomRoot"]
 
 [node name="IsoHUD" type="CanvasLayer" parent="."]
@@ -55,7 +57,7 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.28, 0.22, 0.18, 1)
 theme_override_font_sizes/font_size = 18
-text = "Ítem 04: Papel tapiz"
+text = "Ítem 15: Alfombra chica"
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="IsoHUD/Safe/VBox"]

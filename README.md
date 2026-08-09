@@ -14,7 +14,8 @@ Catálogo y orden de creación: [`docs/ISO-ROOM-DIRECTOR.md`](docs/ISO-ROOM-DIRE
 - ✅ **Ítem 07 — Ventana pequeña** (Día / Tarde / Noche)
 - ✅ **Ítem 11 — Lámpara de techo** (Cálida / Rosa / Apagada)
 - ✅ **Ítem 04 — Papel tapiz** (Ninguno / Puntos / Rayas)
-- 🔜 Ítem 15 — Alfombra chica
+- ✅ **Ítem 15 — Alfombra chica** (Ninguna / Rubor / Salvia / Cielo)
+- 🔜 Ítem 19 — Cama de gato
 
 ## APK de prueba
 

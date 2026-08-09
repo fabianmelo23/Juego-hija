@@ -1,5 +1,5 @@
 extends Node2D
-## Shell isométrico + ventana + lámpara + papel tapiz.
+## Shell isométrico: shell, aberturas, luz, papel y alfombra.
 
 signal floor_changed(variant_id: String)
 signal wall_left_changed(variant_id: String)
@@ -7,13 +7,16 @@ signal wall_right_changed(variant_id: String)
 signal window_changed(variant_id: String)
 signal light_changed(variant_id: String)
 signal wallpaper_changed(variant_id: String)
+signal rug_changed(variant_id: String)
 
 const ROOM_SIZE := Vector2i(8, 8)
 const WALL_HEIGHT := 64
 const WINDOW_SLOT_X := 3 # posición en la pared derecha
+const RUG_ORIGIN := Vector2i(3, 3) # huella 2×2
 
 @onready var room_root: Node2D = $RoomRoot
 @onready var floor_layer: Node2D = $RoomRoot/FloorLayer
+@onready var rug_layer: Node2D = $RoomRoot/RugLayer
 @onready var wall_left_layer: Node2D = $RoomRoot/WallLeftLayer
 @onready var wall_right_layer: Node2D = $RoomRoot/WallRightLayer
 @onready var wallpaper_left_layer: Node2D = $RoomRoot/WallpaperLeftLayer
@@ -33,6 +36,7 @@ var _window_textures: Dictionary = {}
 var _light_textures: Dictionary = {}
 var _wallpaper_left_textures: Dictionary = {}
 var _wallpaper_right_textures: Dictionary = {}
+var _rug_textures: Dictionary = {}
 var _floor_tiles: Dictionary = {}
 var _wall_left_tiles: Array[Sprite2D] = []
 var _wall_right_tiles: Array[Sprite2D] = []
@@ -40,6 +44,7 @@ var _wallpaper_left_tiles: Array[Sprite2D] = []
 var _wallpaper_right_tiles: Array[Sprite2D] = []
 var _window_sprite: Sprite2D
 var _light_sprite: Sprite2D
+var _rug_sprite: Sprite2D
 
 var _current_floor: String = "floor_wood_light"
 var _current_wall_left: String = "wall_left_cream"
@@ -47,7 +52,8 @@ var _current_wall_right: String = "wall_right_cream"
 var _current_window: String = "window_small_day"
 var _current_light: String = "light_ceiling_warm"
 var _current_wallpaper: String = "wallpaper_none"
-var _edit_target: String = "wallpaper"
+var _current_rug: String = "rug_small_blush"
+var _edit_target: String = "rug"
 
 var _floor_variants := [
 	{"id": "floor_wood_light", "name": "Madera clara"},
@@ -85,6 +91,13 @@ var _wallpaper_variants := [
 	{"id": "wallpaper_stripe", "name": "Rayas"},
 ]
 
+var _rug_variants := [
+	{"id": "rug_small_none", "name": "Ninguna"},
+	{"id": "rug_small_blush", "name": "Rubor"},
+	{"id": "rug_small_sage", "name": "Salvia"},
+	{"id": "rug_small_sky", "name": "Cielo"},
+]
+
 
 func _ready() -> void:
 	_load_textures()
@@ -95,6 +108,7 @@ func _ready() -> void:
 	_build_wallpaper()
 	_build_window()
 	_build_light()
+	_build_rug()
 	_build_tabs()
 	_rebuild_variant_buttons()
 	title_label.text = "Casa de Gatos — Cuarto iso"
@@ -104,7 +118,8 @@ func _ready() -> void:
 	set_wallpaper_variant(_current_wallpaper)
 	set_window_variant(_current_window)
 	set_light_variant(_current_light)
-	_set_edit_target("wallpaper")
+	set_rug_variant(_current_rug)
+	_set_edit_target("rug")
 
 
 func _load_textures() -> void:
@@ -127,6 +142,12 @@ func _load_textures() -> void:
 			var style := wid.replace("wallpaper_", "")
 			_wallpaper_left_textures[wid] = load("res://assets/art/iso/wallpaper/wallpaper_left_%s.png" % style)
 			_wallpaper_right_textures[wid] = load("res://assets/art/iso/wallpaper/wallpaper_right_%s.png" % style)
+	for v in _rug_variants:
+		var rid := str(v["id"])
+		if rid == "rug_small_none":
+			_rug_textures[rid] = null
+		else:
+			_rug_textures[rid] = load("res://assets/art/iso/rugs/%s.png" % rid)
 
 
 func _center_room() -> void:
@@ -234,6 +255,20 @@ func _build_light() -> void:
 	light_layer.add_child(_light_sprite)
 
 
+
+func _build_rug() -> void:
+	for child in rug_layer.get_children():
+		child.queue_free()
+	_rug_sprite = Sprite2D.new()
+	_rug_sprite.centered = false
+	_rug_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var anchor := IsoMath.grid_to_screen(RUG_ORIGIN)
+	# PNG 128×72 con 4px de padding superior sobre el diamante 2×2.
+	_rug_sprite.position = anchor - Vector2(64, 4)
+	_rug_sprite.z_index = 20 + RUG_ORIGIN.x + RUG_ORIGIN.y
+	rug_layer.add_child(_rug_sprite)
+
+
 func _build_tabs() -> void:
 	for child in tab_bar.get_children():
 		child.queue_free()
@@ -243,6 +278,7 @@ func _build_tabs() -> void:
 	_add_tab_button("Papel", "wallpaper")
 	_add_tab_button("Vent", "window")
 	_add_tab_button("Luz", "light")
+	_add_tab_button("Alfom", "rug")
 
 
 func _add_tab_button(label: String, target: String) -> void:
@@ -250,7 +286,7 @@ func _add_tab_button(label: String, target: String) -> void:
 	button.focus_mode = Control.FOCUS_NONE
 	button.custom_minimum_size = Vector2(0, 52)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.add_theme_font_size_override("font_size", 13)
+	button.add_theme_font_size_override("font_size", 11)
 	button.text = label
 	button.pressed.connect(func() -> void:
 		_set_edit_target(target)
@@ -274,6 +310,8 @@ func _set_edit_target(target: String) -> void:
 			hint_label.text = "Editando: Lámpara · %s" % _nice_name(_light_variants, _current_light)
 		"wallpaper":
 			hint_label.text = "Editando: Papel · %s" % _nice_name(_wallpaper_variants, _current_wallpaper)
+		"rug":
+			hint_label.text = "Editando: Alfombra · %s" % _nice_name(_rug_variants, _current_rug)
 
 
 func _variants_for_target() -> Array:
@@ -288,6 +326,8 @@ func _variants_for_target() -> Array:
 			return _light_variants
 		"wallpaper":
 			return _wallpaper_variants
+		"rug":
+			return _rug_variants
 		_:
 			return _floor_variants
 
@@ -317,6 +357,8 @@ func _rebuild_variant_buttons() -> void:
 					set_light_variant(id)
 				"wallpaper":
 					set_wallpaper_variant(id)
+				"rug":
+					set_rug_variant(id)
 		)
 		variant_bar.add_child(button)
 
@@ -423,6 +465,19 @@ func set_wallpaper_variant(variant_id: String) -> void:
 	wallpaper_changed.emit(variant_id)
 
 
+
+func set_rug_variant(variant_id: String) -> void:
+	if not _rug_textures.has(variant_id) or _rug_sprite == null:
+		return
+	_current_rug = variant_id
+	var tex = _rug_textures[variant_id]
+	_rug_sprite.texture = tex
+	_rug_sprite.visible = tex != null
+	if _edit_target == "rug":
+		hint_label.text = "Editando: Alfombra · %s" % _nice_name(_rug_variants, variant_id)
+	rug_changed.emit(variant_id)
+
+
 func get_current_floor_variant() -> String:
 	return _current_floor
 
@@ -444,6 +499,11 @@ func get_current_light_variant() -> String:
 
 func get_current_wallpaper_variant() -> String:
 	return _current_wallpaper
+
+func get_current_rug_variant() -> String:
+	return _current_rug
+
+
 
 
 
