@@ -7,6 +7,10 @@ func _init() -> void:
 
 
 func _run() -> void:
+	# Evita que un layout guardado de otra prueba deje inventario vacío.
+	if FileAccess.file_exists("user://room_layout.json"):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("user://room_layout.json"))
+
 	var deco_scene: PackedScene = load("res://scenes/furniture/room_decorator.tscn")
 	var deco: Node2D = deco_scene.instantiate()
 	root.add_child(deco)

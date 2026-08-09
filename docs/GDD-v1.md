@@ -293,9 +293,9 @@ casa-de-gatos/
 - Inventario (Mochila) + colocar 5 muebles con snap a cuadrícula
 - Girar / Guardar / Listo + layout persistente en el dispositivo
 
-### Hito 3 — Misiones + economía
-- 8 misiones encadenadas suaves
-- Huellitas y tienda mínima
+### Hito 3 — Misiones + economía ✅
+- 8 misiones encadenadas suaves con recompensa en Huellitas
+- Tienda mínima para comprar muebles con Huellitas
 
 ### Hito 4 — Pulido jugable para ella
 - 2.º y 3.er gato
@@ -333,4 +333,5 @@ Si eso ocurre, el juego ya ganó. El resto es expansión.
 - **Hito 0 listo:** esqueleto móvil (mapa, tap-to-move, HUD, Huellitas).
 - **Hito 1 listo:** gata **Miel** con Hambre / Energía / Felicidad; acciones Comer, Mimos, Jugar, Dormir; recompensa en Huellitas.
 - **Hito 2 listo:** Mochila + colocar Cama/Plato/Rascador/Juguete/Maceta en cuadrícula; Girar/Guardar/Listo.
-- Siguiente: **Hito 3** — misiones cortas + economía con Huellitas.
+- **Hito 3 listo:** 8 misiones + Tienda de Huellitas + progreso guardado.
+- Siguiente: **Hito 4** — pulido, 2.º/3.er gato, sonido y export APK Android.

@@ -1,5 +1,5 @@
 extends Node2D
-## Orquesta toques: gatos, caminar y decorar la casa.
+## Orquesta toques: gatos, decorar, misiones y tienda.
 
 @onready var player: CharacterBody2D = $Player
 @onready var touch_hud: CanvasLayer = $TouchHUD
@@ -10,6 +10,7 @@ extends Node2D
 @export var walk_rect: Rect2 = Rect2(-300, -480, 600, 960)
 
 var _selected_cat: Node2D = null
+var _missions: MissionSystem = MissionSystem.new()
 
 
 func _ready() -> void:
@@ -17,6 +18,7 @@ func _ready() -> void:
 	touch_hud.care_action_pressed.connect(_on_care_action)
 	touch_hud.inventory_item_pressed.connect(_on_inventory_item)
 	touch_hud.build_action_pressed.connect(_on_build_action)
+	touch_hud.shop_item_pressed.connect(_on_shop_item)
 	decorator.placed.connect(_on_furniture_placed)
 	decorator.layout_saved.connect(func() -> void:
 		touch_hud.show_toast("Casa guardada")
@@ -26,7 +28,15 @@ func _ready() -> void:
 	cat.reacted.connect(func(message: String) -> void:
 		touch_hud.show_toast(message)
 	)
-	touch_hud.show_toast("Toca a Miel o abre la Mochila")
+
+	var saved := _missions.load_progress()
+	if saved.has("huellitas"):
+		touch_hud.set_huellitas(int(saved["huellitas"]))
+	else:
+		touch_hud.set_huellitas(2)
+		_save_progress()
+	_refresh_mission_ui()
+	touch_hud.show_toast("Misión: %s" % str(_missions.get_current().get("title", "")))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -60,8 +70,9 @@ func _handle_world_tap(screen_position: Vector2) -> void:
 		touch_hud.show_toast("Ahí no se puede caminar")
 		return
 	_clear_selection()
-	if touch_hud.is_inventory_open():
-		touch_hud.hide_inventory()
+	touch_hud.hide_inventory()
+	touch_hud.hide_mission()
+	touch_hud.hide_shop()
 	player.go_to(world_pos)
 
 
@@ -93,6 +104,7 @@ func _select_cat(target: Node2D) -> void:
 	var approach := _selected_cat.global_position + Vector2(48, 10)
 	if walk_rect.has_point(approach):
 		player.go_to(approach)
+	_handle_mission_result(_missions.notify("greet"))
 
 
 func _clear_selection() -> void:
@@ -103,9 +115,11 @@ func _clear_selection() -> void:
 
 
 func _on_cat_needs_changed(hunger: float, energy: float, happiness: float) -> void:
-	if _selected_cat == null:
-		return
-	touch_hud.update_needs(hunger, energy, happiness)
+	if _selected_cat != null:
+		touch_hud.update_needs(hunger, energy, happiness)
+	var current := _missions.get_current()
+	if str(current.get("id", "")) == "happy" and happiness >= 80.0:
+		_handle_mission_result(_missions.notify("happy"))
 
 
 func _on_hud_action(action_id: String) -> void:
@@ -113,7 +127,7 @@ func _on_hud_action(action_id: String) -> void:
 		"inventory":
 			_open_inventory()
 		"mission":
-			touch_hud.show_toast("Misiones (próximo hito)")
+			_open_mission()
 		"care":
 			if decorator.is_decorating():
 				touch_hud.show_toast("Termina de decorar con Listo")
@@ -123,13 +137,41 @@ func _on_hud_action(action_id: String) -> void:
 			else:
 				touch_hud.show_toast("Usa Comer / Mimos / Jugar / Dormir")
 		"pause":
-			touch_hud.show_toast("Pausa / menú (próximo)")
+			_open_shop()
 
 
 func _open_inventory() -> void:
 	_clear_selection()
+	touch_hud.hide_mission()
+	touch_hud.hide_shop()
 	touch_hud.show_inventory(decorator.get_inventory_snapshot())
 	touch_hud.show_toast("Elige un mueble")
+
+
+func _open_mission() -> void:
+	_clear_selection()
+	touch_hud.show_mission(_missions.get_current())
+
+
+func _open_shop() -> void:
+	if decorator.is_decorating():
+		touch_hud.show_toast("Termina de decorar con Listo")
+		return
+	_clear_selection()
+	touch_hud.show_shop(_shop_rows())
+
+
+func _shop_rows() -> Array:
+	var rows: Array = []
+	for item in ShopCatalog.all():
+		var price := int(item.get("price", 0))
+		rows.append({
+			"id": str(item["id"]),
+			"name": str(item["name"]),
+			"price": price,
+			"affordable": touch_hud.huellitas >= price,
+		})
+	return rows
 
 
 func _refresh_inventory_if_open() -> void:
@@ -154,19 +196,39 @@ func _on_build_action(action_id: String) -> void:
 			touch_hud.show_toast("Girado")
 		"save":
 			decorator.save_layout()
+			_save_progress()
 		"cancel":
 			decorator.save_layout()
 			decorator.exit_decorate_mode()
 			touch_hud.set_decorate_chrome(false)
+			_save_progress()
 			touch_hud.show_toast("Listo — casa guardada")
 
 
 func _on_furniture_placed(item_id: String) -> void:
 	touch_hud.add_huellitas(2)
-	# Un hogar bonito anima a Miel.
 	if item_id in ["bed", "toy", "scratcher"]:
 		cat.happiness = minf(100.0, cat.happiness + 8.0)
 	_refresh_inventory_if_open()
+	_handle_mission_result(_missions.notify("place", {"item_id": item_id}))
+	_save_progress()
+
+
+func _on_shop_item(item_id: String) -> void:
+	var item := ShopCatalog.by_id(item_id)
+	if item.is_empty():
+		touch_hud.show_toast("No disponible")
+		return
+	var price := int(item.get("price", 0))
+	if not touch_hud.spend_huellitas(price):
+		touch_hud.show_toast("Te faltan Huellitas")
+		touch_hud.show_shop(_shop_rows())
+		return
+	decorator.inventory.add(item_id, 1)
+	touch_hud.show_toast("Compraste: %s" % str(item.get("name", item_id)))
+	_handle_mission_result(_missions.notify("buy"))
+	_save_progress()
+	touch_hud.show_shop(_shop_rows())
 
 
 func _on_care_action(action_id: String) -> void:
@@ -196,3 +258,30 @@ func _on_care_action(action_id: String) -> void:
 			_selected_cat.energy,
 			_selected_cat.happiness
 		)
+		if action_id in ["feed", "pet", "sleep"]:
+			_handle_mission_result(_missions.notify(action_id))
+		_save_progress()
+
+
+func _handle_mission_result(result: Dictionary) -> void:
+	if not bool(result.get("completed", false)):
+		_refresh_mission_ui()
+		return
+	var reward := int(result.get("reward", 0))
+	var mission: Dictionary = result.get("mission", {})
+	touch_hud.add_huellitas(reward)
+	touch_hud.show_toast("¡Misión lista! +%d Huellitas — %s" % [reward, str(mission.get("title", ""))], 2.2)
+	_refresh_mission_ui()
+	_save_progress()
+
+
+func _refresh_mission_ui() -> void:
+	var mission := _missions.get_current()
+	if bool(mission.get("done", false)):
+		touch_hud.set_mission_hint("Misiones completadas")
+	else:
+		touch_hud.set_mission_hint("Misión: %s" % str(mission.get("title", "")))
+
+
+func _save_progress() -> void:
+	_missions.save_progress({"huellitas": touch_hud.huellitas})
