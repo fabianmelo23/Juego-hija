@@ -9,7 +9,8 @@ Catálogo y orden de creación: [`docs/ISO-ROOM-DIRECTOR.md`](docs/ISO-ROOM-DIRE
 
 ### Estado
 - ✅ **Ítem 01 — Piso base** (madera clara / cálida / azul suave)
-- 🔜 Ítem 02 — Pared izquierda
+- ✅ **Ítem 02 — Pared izquierda** (crema / rubor / salvia)
+- 🔜 Ítem 03 — Pared derecha
 
 ## APK de prueba
 
