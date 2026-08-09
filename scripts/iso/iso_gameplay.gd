@@ -1,6 +1,8 @@
 extends Node
 ## Cuidados, misiones y tienda mínima sobre el cuarto isométrico.
 
+const CasaUiTheme := preload("res://scripts/ui/casa_ui_theme.gd")
+
 signal mode_changed(mode: String)
 
 const CAT_ORIGIN := Vector2i(4, 4)
@@ -188,6 +190,8 @@ func open_mission() -> void:
 func close_mission() -> void:
 	if mission_panel:
 		mission_panel.visible = false
+	if room and room.has_method("_refresh_mode_button_styles"):
+		room._refresh_mode_button_styles("care")
 
 
 func open_shop() -> void:
@@ -202,6 +206,8 @@ func open_shop() -> void:
 func close_shop() -> void:
 	if shop_panel:
 		shop_panel.visible = false
+	if room and room.has_method("_refresh_mode_button_styles"):
+		room._refresh_mode_button_styles("care")
 
 
 func buy_treat() -> void:
@@ -226,14 +232,24 @@ func _rebuild_shop() -> void:
 	var list: VBoxContainer = shop_panel.get_node("VBox/ShopList")
 	for child in list.get_children():
 		child.queue_free()
+	var card := PanelContainer.new()
+	CasaUiTheme.apply_panel(card, "card")
+	list.add_child(card)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 8)
+	card.add_child(col)
+	var desc := Label.new()
+	desc.text = "Un gusto dulce para Miel"
+	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	CasaUiTheme.apply_label(desc, "muted", 14)
+	col.add_child(desc)
 	var button := Button.new()
-	button.focus_mode = Control.FOCUS_NONE
-	button.custom_minimum_size = Vector2(0, 64)
-	button.add_theme_font_size_override("font_size", 20)
+	button.custom_minimum_size = Vector2(0, 56)
 	button.text = "Golosina — 3 Huellitas"
 	button.disabled = huellitas < 3
+	CasaUiTheme.apply_button(button, "primary", 18)
 	button.pressed.connect(buy_treat)
-	list.add_child(button)
+	col.add_child(button)
 
 
 func _on_needs_changed(hunger: float, energy: float, happiness: float) -> void:

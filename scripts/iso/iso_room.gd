@@ -1,6 +1,8 @@
 extends Node2D
 ## Cuarto isométrico: decorar + cuidar a Miel.
 
+const CasaUiTheme := preload("res://scripts/ui/casa_ui_theme.gd")
+
 signal floor_changed(variant_id: String)
 signal wall_left_changed(variant_id: String)
 signal wall_right_changed(variant_id: String)
@@ -191,6 +193,8 @@ func _ready() -> void:
 	_set_edit_target("floor")
 	_setup_gameplay()
 	_setup_camera_and_catalog()
+	CasaUiTheme.style_hud($IsoHUD/Safe)
+	_refresh_mode_button_styles("care")
 
 
 
@@ -231,12 +235,12 @@ func _build_mode_bar() -> void:
 		child.queue_free()
 	for label_target in [["Cuidar", "care"], ["Decorar", "decorate"], ["Misión", "mission"], ["Tienda", "shop"]]:
 		var button := Button.new()
-		button.focus_mode = Control.FOCUS_NONE
-		button.custom_minimum_size = Vector2(0, 48)
+		button.custom_minimum_size = Vector2(0, 52)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.add_theme_font_size_override("font_size", 15)
 		button.text = label_target[0]
 		var target := str(label_target[1])
+		button.set_meta("mode_id", target)
+		CasaUiTheme.apply_button(button, "secondary", 15)
 		button.pressed.connect(func() -> void:
 			match target:
 				"care":
@@ -245,18 +249,22 @@ func _build_mode_bar() -> void:
 					if camera_ctrl:
 						camera_ctrl.pan_enabled = true
 					gameplay.set_mode("care")
+					_refresh_mode_button_styles("care")
 					hint_label.text = "Toca a Miel · pellizca para zoom · arrastra con 2 dedos para mover vista"
 				"decorate":
 					gameplay.set_mode("decorate")
 					_set_catalog_visible(true)
 					if camera_ctrl:
 						camera_ctrl.pan_enabled = true
+					_refresh_mode_button_styles("decorate")
 					hint_label.text = "Arrastra del catálogo al cuarto · pellizca = zoom"
 					_set_edit_target(_edit_target)
 				"mission":
 					gameplay.open_mission()
+					_refresh_mode_button_styles("mission")
 				"shop":
 					gameplay.open_shop()
+					_refresh_mode_button_styles("shop")
 		)
 		bar.add_child(button)
 
@@ -267,16 +275,25 @@ func _build_care_bar() -> void:
 		child.queue_free()
 	for label_action in [["Comer", "feed"], ["Mimos", "pet"], ["Jugar", "play"], ["Dormir", "sleep"]]:
 		var button := Button.new()
-		button.focus_mode = Control.FOCUS_NONE
 		button.custom_minimum_size = Vector2(0, 56)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.add_theme_font_size_override("font_size", 16)
 		button.text = label_action[0]
 		var action := str(label_action[1])
+		CasaUiTheme.apply_button(button, "primary", 16)
 		button.pressed.connect(func() -> void:
 			gameplay.do_care(action)
 		)
 		bar.add_child(button)
+
+
+func _refresh_mode_button_styles(active: String) -> void:
+	var bar: HBoxContainer = $IsoHUD/Safe/VBox/ModeBar
+	if bar == null:
+		return
+	for child in bar.get_children():
+		if child is Button:
+			var id := str(child.get_meta("mode_id", ""))
+			CasaUiTheme.apply_button(child, "primary" if id == active else "secondary", 15)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -353,10 +370,10 @@ func _setup_camera_and_catalog() -> void:
 	$IsoHUD/Safe/VBox/TopRow.add_child(zoom_bar)
 	for label_delta in [["−", -0.15], ["⊕", 0.0], ["+", 0.15]]:
 		var b := Button.new()
-		b.focus_mode = Control.FOCUS_NONE
 		b.custom_minimum_size = Vector2(44, 40)
 		b.text = str(label_delta[0])
 		var d := float(label_delta[1])
+		CasaUiTheme.apply_button(b, "ghost" if d == 0.0 else "secondary", 18)
 		b.pressed.connect(func() -> void:
 			if d == 0.0:
 				camera_ctrl.reset_view()
@@ -381,6 +398,7 @@ func _on_catalog_close_requested() -> void:
 		camera_ctrl.pan_enabled = true
 		camera_ctrl.clear_gestures()
 	gameplay.set_mode("care")
+	_refresh_mode_button_styles("care")
 	hint_label.text = "Toca a Miel · pellizca para zoom · arrastra para mover vista"
 
 
@@ -685,11 +703,11 @@ func _build_tabs() -> void:
 
 func _add_tab_button(parent: HBoxContainer, label: String, target: String) -> void:
 	var button := Button.new()
-	button.focus_mode = Control.FOCUS_NONE
 	button.custom_minimum_size = Vector2(0, 48)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.add_theme_font_size_override("font_size", 12)
 	button.text = label
+	button.set_meta("edit_target", target)
+	CasaUiTheme.apply_button(button, "tab_off", 12)
 	button.pressed.connect(func() -> void:
 		_set_edit_target(target)
 	)
@@ -699,6 +717,10 @@ func _add_tab_button(parent: HBoxContainer, label: String, target: String) -> vo
 func _set_edit_target(target: String) -> void:
 	_edit_target = target
 	_rebuild_variant_buttons()
+	for child in tab_bar.get_children():
+		if child is Button:
+			var id := str(child.get_meta("edit_target", ""))
+			CasaUiTheme.apply_button(child, "tab_on" if id == target else "tab_off", 12)
 	if target not in ["rug", "bed", "bowl", "scratcher", "toy"]:
 		_clear_ghost()
 	match target:
@@ -762,12 +784,11 @@ func _rebuild_variant_buttons() -> void:
 		child.queue_free()
 	for v in _variants_for_target():
 		var button := Button.new()
-		button.focus_mode = Control.FOCUS_NONE
-		button.custom_minimum_size = Vector2(0, 64)
+		button.custom_minimum_size = Vector2(0, 56)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.add_theme_font_size_override("font_size", 18)
 		button.text = str(v["name"])
 		var id := str(v["id"])
+		CasaUiTheme.apply_button(button, "secondary", 16)
 		button.pressed.connect(func() -> void:
 			match _edit_target:
 				"floor":
