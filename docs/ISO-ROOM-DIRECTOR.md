@@ -142,9 +142,9 @@ Trabajamos **uno por uno**. No se salta de categoría sin cerrar el shell.
 
 ### Fase P1 — Habitación respira
 5. **07 `window_small`** ✅ hecho (Día / Tarde / Noche + mood de fondo)  
-6. **11 `light_ceiling`** ← siguiente  
-7. **04 `wallpaper`** (2 variantes)  
-8. **15 `rug_small`**
+6. **11 `light_ceiling`** ✅ hecho (Cálida / Rosa / Apagada + mood combinado)  
+7. **04 `wallpaper`** ✅ hecho (Ninguno / Puntos / Rayas)  
+8. **15 `rug_small`** ← siguiente
 
 ### Fase P2 — Habitación jugable con gatos
 9. **19 `bed_cat`**  
@@ -210,4 +210,4 @@ Hasta que el shell (piso + 2 paredes) no esté sólido, no avanzamos a 20 mueble
 
 ## 10. Siguiente acción inmediata
 
-**Crear Ítem 11 — `light_ceiling`:** lámpara de techo con 2–3 variantes que cambien el mood del cuarto (junto con la ventana).
+**Crear Ítem 15 — `rug_small`:** alfombra 2×2 colocable en el piso isométrico.

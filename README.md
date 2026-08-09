@@ -12,7 +12,9 @@ Catálogo y orden de creación: [`docs/ISO-ROOM-DIRECTOR.md`](docs/ISO-ROOM-DIRE
 - ✅ **Ítem 02 — Pared izquierda** (crema / rubor / salvia)
 - ✅ **Ítem 03 — Pared derecha** (crema / rubor / salvia) — shell completo
 - ✅ **Ítem 07 — Ventana pequeña** (Día / Tarde / Noche)
-- 🔜 Ítem 11 — Lámpara de techo
+- ✅ **Ítem 11 — Lámpara de techo** (Cálida / Rosa / Apagada)
+- ✅ **Ítem 04 — Papel tapiz** (Ninguno / Puntos / Rayas)
+- 🔜 Ítem 15 — Alfombra chica
 
 ## APK de prueba
 

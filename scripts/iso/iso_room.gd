@@ -1,10 +1,12 @@
 extends Node2D
-## Shell isométrico + Ítem 07 ventana pequeña.
+## Shell isométrico + ventana + lámpara + papel tapiz.
 
 signal floor_changed(variant_id: String)
 signal wall_left_changed(variant_id: String)
 signal wall_right_changed(variant_id: String)
 signal window_changed(variant_id: String)
+signal light_changed(variant_id: String)
+signal wallpaper_changed(variant_id: String)
 
 const ROOM_SIZE := Vector2i(8, 8)
 const WALL_HEIGHT := 64
@@ -14,7 +16,10 @@ const WINDOW_SLOT_X := 3 # posición en la pared derecha
 @onready var floor_layer: Node2D = $RoomRoot/FloorLayer
 @onready var wall_left_layer: Node2D = $RoomRoot/WallLeftLayer
 @onready var wall_right_layer: Node2D = $RoomRoot/WallRightLayer
+@onready var wallpaper_left_layer: Node2D = $RoomRoot/WallpaperLeftLayer
+@onready var wallpaper_right_layer: Node2D = $RoomRoot/WallpaperRightLayer
 @onready var window_layer: Node2D = $RoomRoot/WindowLayer
+@onready var light_layer: Node2D = $RoomRoot/LightLayer
 @onready var background: Polygon2D = $Background
 @onready var title_label: Label = $IsoHUD/Safe/VBox/Title
 @onready var hint_label: Label = $IsoHUD/Safe/VBox/Hint
@@ -25,16 +30,24 @@ var _floor_textures: Dictionary = {}
 var _wall_left_textures: Dictionary = {}
 var _wall_right_textures: Dictionary = {}
 var _window_textures: Dictionary = {}
+var _light_textures: Dictionary = {}
+var _wallpaper_left_textures: Dictionary = {}
+var _wallpaper_right_textures: Dictionary = {}
 var _floor_tiles: Dictionary = {}
 var _wall_left_tiles: Array[Sprite2D] = []
 var _wall_right_tiles: Array[Sprite2D] = []
+var _wallpaper_left_tiles: Array[Sprite2D] = []
+var _wallpaper_right_tiles: Array[Sprite2D] = []
 var _window_sprite: Sprite2D
+var _light_sprite: Sprite2D
 
 var _current_floor: String = "floor_wood_light"
 var _current_wall_left: String = "wall_left_cream"
 var _current_wall_right: String = "wall_right_cream"
 var _current_window: String = "window_small_day"
-var _edit_target: String = "window"
+var _current_light: String = "light_ceiling_warm"
+var _current_wallpaper: String = "wallpaper_none"
+var _edit_target: String = "wallpaper"
 
 var _floor_variants := [
 	{"id": "floor_wood_light", "name": "Madera clara"},
@@ -60,6 +73,18 @@ var _window_variants := [
 	{"id": "window_small_night", "name": "Noche"},
 ]
 
+var _light_variants := [
+	{"id": "light_ceiling_warm", "name": "Cálida"},
+	{"id": "light_ceiling_rose", "name": "Rosa"},
+	{"id": "light_ceiling_off", "name": "Apagada"},
+]
+
+var _wallpaper_variants := [
+	{"id": "wallpaper_none", "name": "Ninguno"},
+	{"id": "wallpaper_dots", "name": "Puntos"},
+	{"id": "wallpaper_stripe", "name": "Rayas"},
+]
+
 
 func _ready() -> void:
 	_load_textures()
@@ -67,15 +92,19 @@ func _ready() -> void:
 	_build_floor()
 	_build_wall_left()
 	_build_wall_right()
+	_build_wallpaper()
 	_build_window()
+	_build_light()
 	_build_tabs()
 	_rebuild_variant_buttons()
 	title_label.text = "Casa de Gatos — Cuarto iso"
 	set_floor_variant(_current_floor)
 	set_wall_left_variant(_current_wall_left)
 	set_wall_right_variant(_current_wall_right)
+	set_wallpaper_variant(_current_wallpaper)
 	set_window_variant(_current_window)
-	_set_edit_target("window")
+	set_light_variant(_current_light)
+	_set_edit_target("wallpaper")
 
 
 func _load_textures() -> void:
@@ -87,6 +116,17 @@ func _load_textures() -> void:
 		_wall_right_textures[str(v["id"])] = load("res://assets/art/iso/walls/%s.png" % str(v["id"]))
 	for v in _window_variants:
 		_window_textures[str(v["id"])] = load("res://assets/art/iso/windows/%s.png" % str(v["id"]))
+	for v in _light_variants:
+		_light_textures[str(v["id"])] = load("res://assets/art/iso/lights/%s.png" % str(v["id"]))
+	for v in _wallpaper_variants:
+		var wid := str(v["id"])
+		if wid == "wallpaper_none":
+			_wallpaper_left_textures[wid] = null
+			_wallpaper_right_textures[wid] = null
+		else:
+			var style := wid.replace("wallpaper_", "")
+			_wallpaper_left_textures[wid] = load("res://assets/art/iso/wallpaper/wallpaper_left_%s.png" % style)
+			_wallpaper_right_textures[wid] = load("res://assets/art/iso/wallpaper/wallpaper_right_%s.png" % style)
 
 
 func _center_room() -> void:
@@ -140,6 +180,34 @@ func _build_wall_right() -> void:
 		_wall_right_tiles.append(sprite)
 
 
+
+func _build_wallpaper() -> void:
+	for child in wallpaper_left_layer.get_children():
+		child.queue_free()
+	for child in wallpaper_right_layer.get_children():
+		child.queue_free()
+	_wallpaper_left_tiles.clear()
+	_wallpaper_right_tiles.clear()
+	for y in ROOM_SIZE.y:
+		var sprite := Sprite2D.new()
+		sprite.centered = false
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var anchor := IsoMath.grid_to_screen(Vector2i(0, y))
+		sprite.position = anchor - Vector2(IsoMath.TILE_W / 2, WALL_HEIGHT)
+		sprite.z_index = 5 + y + 1
+		wallpaper_left_layer.add_child(sprite)
+		_wallpaper_left_tiles.append(sprite)
+	for x in ROOM_SIZE.x:
+		var sprite := Sprite2D.new()
+		sprite.centered = false
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var anchor := IsoMath.grid_to_screen(Vector2i(x, 0))
+		sprite.position = anchor - Vector2(0, WALL_HEIGHT)
+		sprite.z_index = 4 + x + 1
+		wallpaper_right_layer.add_child(sprite)
+		_wallpaper_right_tiles.append(sprite)
+
+
 func _build_window() -> void:
 	for child in window_layer.get_children():
 		child.queue_free()
@@ -153,13 +221,28 @@ func _build_window() -> void:
 	window_layer.add_child(_window_sprite)
 
 
+func _build_light() -> void:
+	for child in light_layer.get_children():
+		child.queue_free()
+	_light_sprite = Sprite2D.new()
+	_light_sprite.centered = false
+	_light_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	# Cuelga cerca del centro del cuarto.
+	var anchor := IsoMath.grid_to_screen(Vector2i(ROOM_SIZE.x / 2, ROOM_SIZE.y / 2))
+	_light_sprite.position = anchor + Vector2(-14, -118)
+	_light_sprite.z_index = 80
+	light_layer.add_child(_light_sprite)
+
+
 func _build_tabs() -> void:
 	for child in tab_bar.get_children():
 		child.queue_free()
 	_add_tab_button("Piso", "floor")
-	_add_tab_button("P.izq", "wall_left")
-	_add_tab_button("P.der", "wall_right")
-	_add_tab_button("Ventana", "window")
+	_add_tab_button("Izq", "wall_left")
+	_add_tab_button("Der", "wall_right")
+	_add_tab_button("Papel", "wallpaper")
+	_add_tab_button("Vent", "window")
+	_add_tab_button("Luz", "light")
 
 
 func _add_tab_button(label: String, target: String) -> void:
@@ -167,7 +250,7 @@ func _add_tab_button(label: String, target: String) -> void:
 	button.focus_mode = Control.FOCUS_NONE
 	button.custom_minimum_size = Vector2(0, 52)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.add_theme_font_size_override("font_size", 16)
+	button.add_theme_font_size_override("font_size", 13)
 	button.text = label
 	button.pressed.connect(func() -> void:
 		_set_edit_target(target)
@@ -187,6 +270,10 @@ func _set_edit_target(target: String) -> void:
 			hint_label.text = "Editando: Pared derecha · %s" % _nice_name(_wall_right_variants, _current_wall_right)
 		"window":
 			hint_label.text = "Editando: Ventana · %s" % _nice_name(_window_variants, _current_window)
+		"light":
+			hint_label.text = "Editando: Lámpara · %s" % _nice_name(_light_variants, _current_light)
+		"wallpaper":
+			hint_label.text = "Editando: Papel · %s" % _nice_name(_wallpaper_variants, _current_wallpaper)
 
 
 func _variants_for_target() -> Array:
@@ -197,6 +284,10 @@ func _variants_for_target() -> Array:
 			return _wall_right_variants
 		"window":
 			return _window_variants
+		"light":
+			return _light_variants
+		"wallpaper":
+			return _wallpaper_variants
 		_:
 			return _floor_variants
 
@@ -222,6 +313,10 @@ func _rebuild_variant_buttons() -> void:
 					set_wall_right_variant(id)
 				"window":
 					set_window_variant(id)
+				"light":
+					set_light_variant(id)
+				"wallpaper":
+					set_wallpaper_variant(id)
 		)
 		variant_bar.add_child(button)
 
@@ -267,20 +362,65 @@ func set_window_variant(variant_id: String) -> void:
 		return
 	_current_window = variant_id
 	_window_sprite.texture = _window_textures[variant_id]
-	_apply_window_mood(variant_id)
+	_apply_room_mood()
 	if _edit_target == "window":
 		hint_label.text = "Editando: Ventana · %s" % _nice_name(_window_variants, variant_id)
 	window_changed.emit(variant_id)
 
 
-func _apply_window_mood(variant_id: String) -> void:
-	match variant_id:
+func set_light_variant(variant_id: String) -> void:
+	if not _light_textures.has(variant_id) or _light_sprite == null:
+		return
+	_current_light = variant_id
+	_light_sprite.texture = _light_textures[variant_id]
+	_apply_room_mood()
+	if _edit_target == "light":
+		hint_label.text = "Editando: Lámpara · %s" % _nice_name(_light_variants, variant_id)
+	light_changed.emit(variant_id)
+
+
+func _apply_room_mood() -> void:
+	# Combina cielo de ventana + estado de lámpara.
+	var base: Color
+	match _current_window:
 		"window_small_evening":
-			background.color = Color(0.90, 0.78, 0.68, 1)
+			base = Color(0.90, 0.78, 0.68, 1)
 		"window_small_night":
-			background.color = Color(0.35, 0.42, 0.55, 1)
+			base = Color(0.35, 0.42, 0.55, 1)
 		_:
-			background.color = Color(0.78, 0.86, 0.90, 1)
+			base = Color(0.78, 0.86, 0.90, 1)
+
+	match _current_light:
+		"light_ceiling_warm":
+			base = base.lerp(Color(1.0, 0.92, 0.75, 1), 0.28)
+			room_root.modulate = Color(1.05, 1.0, 0.94, 1)
+		"light_ceiling_rose":
+			base = base.lerp(Color(1.0, 0.82, 0.88, 1), 0.30)
+			room_root.modulate = Color(1.04, 0.96, 0.98, 1)
+		_:
+			# Apagada: cuarto un poco más frío/oscuro.
+			base = base.lerp(Color(0.22, 0.24, 0.32, 1), 0.35)
+			room_root.modulate = Color(0.78, 0.80, 0.88, 1)
+
+	background.color = base
+
+
+
+func set_wallpaper_variant(variant_id: String) -> void:
+	if not _wallpaper_left_textures.has(variant_id):
+		return
+	_current_wallpaper = variant_id
+	var left_tex = _wallpaper_left_textures[variant_id]
+	var right_tex = _wallpaper_right_textures[variant_id]
+	for sprite in _wallpaper_left_tiles:
+		sprite.texture = left_tex
+		sprite.visible = left_tex != null
+	for sprite in _wallpaper_right_tiles:
+		sprite.texture = right_tex
+		sprite.visible = right_tex != null
+	if _edit_target == "wallpaper":
+		hint_label.text = "Editando: Papel · %s" % _nice_name(_wallpaper_variants, variant_id)
+	wallpaper_changed.emit(variant_id)
 
 
 func get_current_floor_variant() -> String:
@@ -297,6 +437,15 @@ func get_current_wall_right_variant() -> String:
 
 func get_current_window_variant() -> String:
 	return _current_window
+
+
+func get_current_light_variant() -> String:
+	return _current_light
+
+func get_current_wallpaper_variant() -> String:
+	return _current_wallpaper
+
+
 
 
 func _nice_name(list: Array, id: String) -> String:
