@@ -138,12 +138,11 @@ Trabajamos **uno por uno**. No se salta de categoría sin cerrar el shell.
 1. **01 `floor_base`** ✅ hecho (3 variantes de piso)  
 2. **02 `wall_left`** ✅ hecho (crema / rubor / salvia)  
 3. **03 `wall_right`** ✅ hecho (crema / rubor / salvia) — **shell P0 cerrado**  
-4. Validación visual en celular (APK)  
-5. Siguiente fase P1: **07 `window_small`**
+4. Validación visual en celular (APK)
 
 ### Fase P1 — Habitación respira
-5. **07 `window_small`**  
-6. **11 `light_ceiling`**  
+5. **07 `window_small`** ✅ hecho (Día / Tarde / Noche + mood de fondo)  
+6. **11 `light_ceiling`** ← siguiente  
 7. **04 `wallpaper`** (2 variantes)  
 8. **15 `rug_small`**
 
@@ -211,4 +210,4 @@ Hasta que el shell (piso + 2 paredes) no esté sólido, no avanzamos a 20 mueble
 
 ## 10. Siguiente acción inmediata
 
-**Crear Ítem 01 — `floor_base`:** piso isométrico 8×8 con 1 material base + 2 variantes de color seleccionables.
+**Crear Ítem 11 — `light_ceiling`:** lámpara de techo con 2–3 variantes que cambien el mood del cuarto (junto con la ventana).
